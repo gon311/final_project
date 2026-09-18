@@ -1,0 +1,88 @@
+{
+  "model": "yolo11n.pt",
+  "ultralytics_version": "8.4.155",
+  "gpu": "NVIDIA A100-SXM4-40GB",
+  "executor": "root",
+  "executed_at": "2026-09-18T02:33:31+00:00",
+  "실행자": "root",
+  "실행시각": "2026-09-18T02:33:31+00:00",
+  "sample": {
+    "n_images": 161,
+    "n_specimens": 13,
+    "n_val_images": 35
+  },
+  "train": {
+    "epochs": 100,
+    "batch_used": 16,
+    "best_epoch": 45,
+    "train_minutes": 1.4550383333333334,
+    "params": 2590035,
+    "gflops": null,
+    "best_weights": "/content/drive/MyDrive/shaft_sweep/runs/yolo11n/weights/best.pt"
+  },
+  "detect": {
+    "map50": 0.995,
+    "map50_95": 0.9506666666666665,
+    "precision": 0.9985432862937472,
+    "recall": 1.0,
+    "infer_ms": 2.3263843142818326
+  },
+  "calib": {
+    "calibration_mm": 20.026,
+    "calibration_pixel": 578.6538461397386,
+    "mm_per_pixel": 0.034607909605363515,
+    "n_images": 3,
+    "n_ok": 3,
+    "excluded_from_error_evaluation": true,
+    "n_used_for_median": 3,
+    "calib_spread_pct": 0.03371500143331006,
+    "val_pixel_median": 589.1194133618221,
+    "scale_gap_pct": 1.7764763789333622,
+    "scale_guard_pct": 10.0
+  },
+  "measure": {
+    "bias_um": 211.923041540747,
+    "mae_um": 218.51053335981487,
+    "rmse_um": 331.8199421026975,
+    "repeat_sigma_um": 5.066344755400089,
+    "box_h_std_px": 1.0210060072860123,
+    "box_y1_std_px": 0.933759427316113,
+    "box_y2_std_px": 0.4728622188476361,
+    "ng_detected": 1,
+    "false_alarm": 1,
+    "n_ng_specimens": 1,
+    "n_normal_specimens": 2,
+    "n_eval_images": 35,
+    "n_eval_specimens": 3
+  },
+  "robust": {
+    "n_ok": 35,
+    "n_no_roi": 0,
+    "n_insufficient_edges": 0,
+    "n_outlier_reject": 0
+  },
+  "split": {
+    "seed": 42,
+    "train_specimens": [
+      "N02",
+      "N03",
+      "S01",
+      "S02",
+      "S03",
+      "S04",
+      "S05",
+      "S08",
+      "S09",
+      "S10"
+    ],
+    "val_specimens": [
+      "N01",
+      "S06",
+      "S07"
+    ]
+  },
+  "limitations": [
+    "라벨은 기존 best.pt의 pre-annotation을 사람이 검수한 것으로, 기존 박스 규칙 재현 성능을 비교한다.",
+    "시편 13개, 이미지 161장의 작은 표본이다."
+  ]
+}
