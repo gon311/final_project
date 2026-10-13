@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from shaftlab import extract_profiles, measure_bearing, measure_pin, paths  # noqa: E402
+from shaftlab import extract_profiles, measure_bearing, measure_pin, measure_pin_auto, measure_pin_relative, paths  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DIFF_TOL_PX = 1e-6
@@ -103,6 +103,40 @@ def check_extract_profiles_coverage(sample_files, problems, n_samples=3):
     print(f"\nextract_profiles 열 수 커버리지 점검 ({len(rows)}장): \n{out.to_string(index=False)}")
 
 
+def check_measure_pin_default_consistency(sample_files, problems, n_samples=3):
+    """measure_pin()의 기본값이 실제로 pin_relative와 같은 값을 내는지, measure_pin_auto()가
+    position_method="auto" 명시 호출과 같은지 확인한다(Codex 3차 adversarial-review 반영
+    — 기본값 변경이 명시적 래퍼와 어긋나지 않는지 회귀 테스트로 고정)."""
+    checked = 0
+    for fn in sample_files:
+        if checked >= n_samples:
+            break
+        gray = cv2.imread(os.path.join(paths.IMAGE_DIR, fn), cv2.IMREAD_GRAYSCALE)
+
+        default = measure_pin(gray)
+        relative = measure_pin_relative(gray)
+        if default["diameter_px"] != relative["diameter_px"] or default["window_clipped"] != relative["window_clipped"]:
+            fail(problems, f"{fn}: measure_pin() 기본값이 measure_pin_relative()와 다름 "
+                            f"(default={default['diameter_px']}, relative={relative['diameter_px']})")
+
+        auto_explicit = measure_pin(gray, position_method="auto")
+        auto_wrapper = measure_pin_auto(gray)
+        if auto_explicit["diameter_px"] != auto_wrapper["diameter_px"]:
+            fail(problems, f"{fn}: measure_pin_auto()가 measure_pin(position_method='auto')와 다름 "
+                            f"(wrapper={auto_wrapper['diameter_px']}, explicit={auto_explicit['diameter_px']})")
+
+        # 메타데이터(position_method)로 "기본값이 실제로 pin_relative 창을 쓰는지"를 확인한다.
+        # 이전에는 default와 auto의 diameter_px가 "우연히 같으면" 실패로 쳤는데, 두 창이
+        # 다른 값을 내는 게 기본값이 맞다는 증거는 아니다(같은 값이 나올 수도 있다) — 그래서
+        # 숫자가 아니라 실제로 쓰인 position_method 메타데이터를 본다(Codex 4차 review 반영).
+        if default["position_method"] != "pin_relative":
+            fail(problems, f"{fn}: measure_pin() 기본값의 position_method가 'pin_relative'가 아님 "
+                            f"(실제: {default['position_method']})")
+        checked += 1
+    print(f"[검증] measure_pin() 기본값 일관성 확인 ({checked}장): 기본값=pin_relative, "
+          f"measure_pin_auto()=explicit auto")
+
+
 def measure_one(fn, gray, bearing_orig, pin_orig, known_bearing_failures, expected_pin_files, problems):
     row = {"file": fn}
 
@@ -146,8 +180,12 @@ def measure_one(fn, gray, bearing_orig, pin_orig, known_bearing_failures, expect
         orig_pin_failed = not all_finite(row["orig_P_d_line"], row["orig_P_d_peak"])
 
         try:
-            p_line = measure_pin(gray, edge_method="cross50")
-            p_peak = measure_pin(gray, edge_method="grad_peak")
+            # measure_pin_auto(): pin_gauge_raw.csv는 eda_pin_gauge.py의 자동 구간으로
+            # 만들어졌다. measure_pin()의 기본값은 E5에서 "pin_relative"로 바뀌었으므로,
+            # 원래 재현 대상과 같은 값을 얻으려면 이 명시적 래퍼를 써야 한다(Codex 3차
+            # adversarial-review 반영 — 기본값에 기대지 않고 이름으로 의도를 분명히 한다).
+            p_line = measure_pin_auto(gray, edge_method="cross50")
+            p_peak = measure_pin_auto(gray, edge_method="grad_peak")
             row["new_P_d_line"] = p_line["diameter_px"]
             row["new_P_d_peak"] = p_peak["diameter_px"]
             new_pin_failed = not all_finite(row["new_P_d_line"], row["new_P_d_peak"])
@@ -188,6 +226,10 @@ def main():
         # 파일 집합·실패 집합이 기존 CSV와 다르면 이후 measure_one()이 bearing_orig.loc[fn]에서
         # KeyError로 죽는다(이미지 폴더에만 있는 파일 등). 교집합만 추려 계속하지 않고,
         # 불일치 자체를 제어된 실패로 보고하고 바로 끝낸다.
+        report_and_exit(problems)
+
+    check_measure_pin_default_consistency(sorted(expected_pin_files), problems)
+    if problems:
         report_and_exit(problems)
 
     rows = []
