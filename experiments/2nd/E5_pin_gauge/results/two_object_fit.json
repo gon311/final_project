@@ -1,0 +1,152 @@
+{
+  "physical_scale_mm_per_px": 0.0367,
+  "pin_mm": 10.0,
+  "note": "D_px = D_mm/s + c. 핀(10.000mm)과 샤프트(분류표 실측mm)를 같은 회귀에 넣었다. 비텔레센트릭이 아닌 폰 렌즈 때문에 핀·샤프트가 카메라 이동·초점 변화를 다르게 받을 수 있어 '같은 평면이라면'이라는 가정이 깔린 가설 검증이다.",
+  "caveat_on_spread": "s_bootstrap_spread_*는 검증용 95% 신뢰구간이 아니라 기술통계다. 핀 mm은 항상 10.000으로 고정이고 같은 묶음의 핀·샤프트 점은 같은 촬영 조건을 공유하므로, 묶음을 재표집해도 '핀 뭉치 vs 샤프트 뭉치' 2군집 구조 자체는 거의 안 바뀐다. 독립 재장착·깊이·카메라·초점 불확실성은 전혀 반영하지 않는다 — README 한계 참고.",
+  "seed": 20261013,
+  "n_bootstrap": 5000,
+  "normal_bundles_used_for_fit": [
+    7,
+    8,
+    9,
+    10,
+    13
+  ],
+  "ng_bundles_held_out": [
+    "NG1",
+    "NG2"
+  ],
+  "primary_fit_normal_only": {
+    "with_NO7": {
+      "bundle_ids": [
+        7,
+        8,
+        9,
+        10,
+        13
+      ],
+      "n_points": 10,
+      "n_window_clipped_frames_excluded": 0,
+      "s_mm_per_px": 0.03647629708292614,
+      "s_bootstrap_spread_p2_5_p97_5": [
+        0.036421924641834295,
+        0.03653410325069029
+      ],
+      "c_px": -3.392701775315361,
+      "c_bootstrap_spread_p2_5_p97_5": [
+        -3.8357769224821165,
+        -2.948447806388611
+      ],
+      "s_vs_physical_scale_ratio": 0.9939045526682871
+    },
+    "without_NO7": {
+      "bundle_ids": [
+        8,
+        9,
+        10,
+        13
+      ],
+      "n_points": 8,
+      "n_window_clipped_frames_excluded": 0,
+      "s_mm_per_px": 0.03644887148140766,
+      "s_bootstrap_spread_p2_5_p97_5": [
+        0.03640801859767238,
+        0.036489810482779966
+      ],
+      "c_px": -3.6028567549953,
+      "c_bootstrap_spread_p2_5_p97_5": [
+        -3.9450945786488383,
+        -3.2606750986188464
+      ],
+      "s_vs_physical_scale_ratio": 0.993157261073778
+    }
+  },
+  "ng_heldout_prediction": {
+    "with_NO7_fit": {
+      "NG1": {
+        "bundle": 11,
+        "actual_mm": 19.993,
+        "predicted_mm": 20.035592746087975,
+        "error_um": 42.59274608797625,
+        "actual_direction": "하한 아래(NG)",
+        "predicted_direction": "상한 위"
+      },
+      "NG2": {
+        "bundle": 12,
+        "actual_mm": 20.002000000000002,
+        "predicted_mm": 20.048871494715396,
+        "error_um": 46.871494715393425,
+        "actual_direction": "하한 아래(NG)",
+        "predicted_direction": "상한 위"
+      }
+    },
+    "without_NO7_fit": {
+      "NG1": {
+        "bundle": 11,
+        "actual_mm": 19.993,
+        "predicted_mm": 20.028188404520073,
+        "error_um": 35.1884045200741,
+        "actual_direction": "하한 아래(NG)",
+        "predicted_direction": "OK"
+      },
+      "NG2": {
+        "bundle": 12,
+        "actual_mm": 20.002000000000002,
+        "predicted_mm": 20.041457169193595,
+        "error_um": 39.45716919359299,
+        "actual_direction": "하한 아래(NG)",
+        "predicted_direction": "상한 위"
+      }
+    }
+  },
+  "sensitivity_with_ng": {
+    "note": "NG1·NG2를 적합 데이터에 포함한 경우(0.5절 규칙4 위반, 참고/민감도 분석 전용 — 결론 근거로 쓰지 않음)",
+    "with_NO7": {
+      "bundle_ids": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "n_points": 14,
+      "n_window_clipped_frames_excluded": 0,
+      "s_mm_per_px": 0.03642595974246002,
+      "s_bootstrap_spread_p2_5_p97_5": [
+        0.03635500499303312,
+        0.03650279756147635
+      ],
+      "c_px": -3.8008423473136674,
+      "c_bootstrap_spread_p2_5_p97_5": [
+        -4.380344289064566,
+        -3.2009574780311616
+      ],
+      "s_vs_physical_scale_ratio": 0.9925329630098096
+    },
+    "without_NO7": {
+      "bundle_ids": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "n_points": 12,
+      "n_window_clipped_frames_excluded": 0,
+      "s_mm_per_px": 0.03639930416481118,
+      "s_bootstrap_spread_p2_5_p97_5": [
+        0.03633611245298676,
+        0.036460667024808095
+      ],
+      "c_px": -4.009470773107251,
+      "c_bootstrap_spread_p2_5_p97_5": [
+        -4.5322186959990844,
+        -3.50064852654314
+      ],
+      "s_vs_physical_scale_ratio": 0.9918066529921301
+    }
+  }
+}
