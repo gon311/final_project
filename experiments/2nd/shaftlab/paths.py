@@ -34,3 +34,7 @@ MINWOOK_ROOT = "/Volumes/Lexar/Final/Minwook/shaft-od-vision/experiments/2026100
 
 # 현장 메모 사진 (분류표에 없음, 항상 측정 대상에서 제외. 0.3절)
 EXCLUDED_FILES = {"20261008_155336.jpg"}
+
+# 고정 참조 ROI (0.2절 "측정 위치는 오차원이 아니다" 근거 박스). E4에서 팀원A V3 엔진을
+# 같은 ROI로 돌릴 때 쓴다(x1, y1, x2, y2).
+REFERENCE_BOX = (7844, 3468, 8089, 4468)
