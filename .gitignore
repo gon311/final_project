@@ -249,7 +249,7 @@ vignettes/*.pdf
 .Renviron
 
 # pkgdown site
-docs/
+# docs/  # EXPERIMENTS_20261008.md 등 작업 지시서가 docs/에 있어 주석 처리함 (E1, 0.6절)
 
 # translation temp files
 po/*~
@@ -288,12 +288,16 @@ $RECYCLE.BIN/
 *.lnk
 
 *.jpg
+*.jpeg
 *.npz
 *.pt
 *.pth
 **/cache/
 **/checkpoints/
 runs/
+
+# Codex 로컬 설정 (사용자별 모델 설정, 커밋하지 않음)
+.codex/config.toml
 
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,r,python,macos
