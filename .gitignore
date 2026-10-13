@@ -287,4 +287,13 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+*.jpg
+*.npz
+*.pt
+*.pth
+**/cache/
+**/checkpoints/
+runs/
+
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,r,python,macos
