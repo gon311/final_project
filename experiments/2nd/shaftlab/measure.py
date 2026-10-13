@@ -13,9 +13,11 @@ import numpy as np
 
 EdgeMethod = str  # "cross50" | "grad_peak"
 
-# 베어링부/핀 1/4 축소 영상 탐색 구간 (eda_measure.py, eda_pin_gauge.py와 동일)
+# 베어링부/핀/우측 직선부 1/4 축소 영상 탐색 구간 (eda_measure.py와 동일 — R_는 "우측 긴 축부
+# (참조 구간)" 호출, coarse_section(q, 2130, 2330, 100, 125) + measure_section(margin_frac=0.1, step=4))
 BEARING_COARSE = dict(x0=1940, x1=2060, hmin=128, hmax=145)
 PIN_COARSE = dict(x0=2385, x1=2450, hmin=58, hmax=72)
+R_COARSE = dict(x0=2130, x1=2330, hmin=100, hmax=125)
 
 
 def coarse_section(q, x0, x1, hmin, hmax):
