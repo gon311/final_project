@@ -337,7 +337,14 @@ def measure_pin_profile(gray_full: np.ndarray, margin_frac: float = 0.0, step: i
     )
 
 
-def extract_profiles(gray_full: np.ndarray, section: dict, half_window: int = 40, step: int = 2) -> np.ndarray:
+def extract_profiles(
+    gray_full: np.ndarray,
+    section: dict,
+    half_window: int = 40,
+    step: int = 2,
+    return_labels: bool = False,
+    coarse_seg: np.ndarray = None,
+):
     """상·하단 엣지 주변 밝기 프로파일을 열 단위로 뽑는다 (E7 데이터셋 빌더용).
 
     `section`은 `measure_bearing`/`measure_pin`이 반환한 dict(`top_y_per_col`,
@@ -351,17 +358,45 @@ def extract_profiles(gray_full: np.ndarray, section: dict, half_window: int = 40
 
     반환값은 `shape = (n_selected_cols, 2, 2*half_window+1)` 배열이다
     (axis 1: 0=상단, 1=하단). 길이가 짧은 영상 경계열은 제외한다.
+
+    **`coarse_seg`(E7 Codex adversarial-review 반영, 2차):** 기본값(`None`)이면
+    창 중심을 `round(teacher 서브픽셀 좌표)`로 잡는다 — 이러면 라벨(중심에서 teacher
+    까지 거리)이 반올림 오차(±0.5px)뿐이라 "teacher 좌표가 모델 입력 중심 자체에
+    이미 새어 들어가는" 순환 설계가 된다(Codex 지적, [high]). `coarse_seg`에
+    `coarse_section()`의 원본 반환값(1/4 해상도 좌표)을 넘기면, 중심을 teacher와
+    무관한 **1/4 해상도 좌표 기반 coarse 추정**(`_measure_window`가 `edge_subpx`를
+    부르기 "전" 쓰는 바로 그 `tc`/`bc` — `coarse_section`의 1/4 해상도 양자화 오차를
+    그대로 포함, 실측 범위 top -4~0px, bottom +6~+15px, E7 README 참고)으로 잡는다.
+    이 경우 라벨은 "coarse 중심에서 teacher 서브픽셀 좌표까지"의 더 넓고 의미 있는
+    오프셋이 되어, 모델이 실제로 (`edge_subpx`가 하는 일처럼) 엣지를 찾는 과제가 된다.
+    `half_window=40`은 이 오프셋 범위(최대 약 15px)를 충분히 덮는다.
+
+    `return_labels=True`면 (profiles, labels, xs, centers)를 반환한다(E7 추가,
+    기본값은 기존 동작과 동일해 다른 호출부에 영향 없음). `labels`는
+    `shape=(n,2)`로 프로파일 중심(인덱스 `half_window`, `coarse_seg=None`이면
+    round한 `tc`/`bc`, 아니면 coarse 추정 `tc`/`bc`)에서 실제 서브픽셀 엣지 위치
+    (`tops[k]`/`bots[k]`)까지의 signed 오프셋이다(`top_y_per_col`/`bot_y_per_col`
+    자체가 cross50 서브픽셀 좌표이므로, 이 오프셋이 곧 E7의 teacher 라벨이다).
+    `xs`는 선택된 각 열의 실제 이미지 x 좌표(profiles/labels와 같은 순서로 대응).
+    `centers`는 `shape=(n,2)`로 `(tc, bc)` 정수 중심 좌표다 — `bc - tc`가 그 열의
+    "중심 기준" 지름이고, 여기에 `labels`의 하단-상단 오프셋 차이를 더하면 teacher
+    서브픽셀 지름을 그대로 복원할 수 있다(모델 예측값으로 바꿔 끼워도 같은 식으로
+    지름을 다시 계산할 수 있다는 뜻, E7 `train_eval.py`에서 그렇게 쓴다).
     """
-    xs = section["x_per_col"]
+    xs_all = section["x_per_col"]
     tops = section["top_y_per_col"]
     bots = section["bot_y_per_col"]
     length = 2 * half_window + 1
     h = gray_full.shape[0]
-    x_from, x_to = int(xs[0]), int(xs[-1])
-    profiles = []
+    x_from, x_to = int(xs_all[0]), int(xs_all[-1])
+    profiles, labels, xs_out, centers = [], [], [], []
     for X in range(x_from, x_to + 1, step):
-        k = int(np.argmin(np.abs(xs - X)))
-        tc, bc = int(round(tops[k])), int(round(bots[k]))
+        k = int(np.argmin(np.abs(xs_all - X)))
+        if coarse_seg is None:
+            tc, bc = int(round(tops[k])), int(round(bots[k]))
+        else:
+            si = int(np.argmin(np.abs(coarse_seg[:, 0] * 4 - X)))
+            tc, bc = int(coarse_seg[si, 2] * 4), int(coarse_seg[si, 3] * 4)
         if tc - half_window < 0 or bc + half_window + 1 > h:
             continue
         col = gray_full[:, X - 1:X + 2].astype(np.float64).mean(1)
@@ -370,6 +405,25 @@ def extract_profiles(gray_full: np.ndarray, section: dict, half_window: int = 40
         if len(top_prof) != length or len(bot_prof) != length:
             continue
         profiles.append(np.stack([top_prof, bot_prof]))
+        labels.append((float(tops[k] - tc), float(bots[k] - bc)))
+        xs_out.append(int(X))
+        centers.append((tc, bc))
     if not profiles:
-        return np.empty((0, 2, length), dtype=np.float64)
-    return np.stack(profiles)
+        empty = np.empty((0, 2, length), dtype=np.float64)
+        if return_labels:
+            return (
+                empty,
+                np.empty((0, 2), dtype=np.float64),
+                np.empty((0,), dtype=np.int64),
+                np.empty((0, 2), dtype=np.int64),
+            )
+        return empty
+    out = np.stack(profiles)
+    if return_labels:
+        return (
+            out,
+            np.array(labels, dtype=np.float64),
+            np.array(xs_out, dtype=np.int64),
+            np.array(centers, dtype=np.int64),
+        )
+    return out
