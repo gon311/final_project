@@ -1,0 +1,9 @@
+﻿variant,cond1_mae_beats_repeatability,cond2_win_7of10,cond3_edge_shift_le1px,verdict
+V1_H_l0,False,False,True,이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+V1_H_l1,False,False,True,이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+V1_HB_l0,False,False,True,이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+V1_HB_l1,False,False,True,이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+V2_H_l0,False,False,True,이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+V2_H_l1,False,False,True,이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+V2_HB_l0,False,False,True,이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+V2_HB_l1,False,False,True,이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
