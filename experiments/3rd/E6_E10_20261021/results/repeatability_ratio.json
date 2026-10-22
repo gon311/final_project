@@ -1,0 +1,61 @@
+{
+ "V1_scale_mm_per_px": 0.0260922506245771,
+ "pin_median_px": 613.2088883482172,
+ "within_mount": {
+  "cross50": {
+   "median_sigma_px": 0.1120968062043827,
+   "median_sigma_um": 2.9248579616994026
+  },
+  "grad_peak": {
+   "median_sigma_px": 1.3531231412851132,
+   "median_sigma_um": 35.30602812832622
+  },
+  "moment": {
+   "median_sigma_px": 4.078231003063762,
+   "median_sigma_um": 106.41022543686015
+  }
+ },
+ "remount": {
+  "per_specimen_sd_raw_um": {
+   "NO10": 2.38,
+   "NO11": 4.55,
+   "NO12": 5.21,
+   "NO7": 7.16,
+   "NO8": 5.15,
+   "NO9": 5.26
+  },
+  "per_specimen_sd_ratio_um": {
+   "NO10": 7.45,
+   "NO11": 8.45,
+   "NO12": 6.13,
+   "NO7": 6.59,
+   "NO8": 5.05,
+   "NO9": 3.61
+  },
+  "median_sd_raw_um": 5.18156467850449,
+  "median_sd_ratio_um": 6.35803849036915,
+  "median_sd_pin_px": 0.25597092794124676
+ },
+ "ratio_experiment": {
+  "n_points": 36,
+  "dof": 29,
+  "slope": 0.4777588207124981,
+  "se": 0.11431415971993408,
+  "ci95_t": [
+   0.24396011273779666,
+   0.7115575286871996
+  ],
+  "ci95_bootstrap": [
+   0.2649269426015057,
+   0.662343292260916
+  ],
+  "expected": 1.2288040485569176,
+  "half": 0.6144020242784588,
+  "pin_dp_range_px": [
+   -0.5363226746671899,
+   0.39591246060672347
+  ],
+  "verdict": "부분/무효 (CI가 기대 기울기 제외)",
+  "primary_method": "V1"
+ }
+}
