@@ -1,0 +1,14 @@
+[변형 V1_H_l0] 99.0s
+[변형 V1_H_l1] 119.1s
+[변형 V1_HB_l0] 192.0s
+[변형 V1_HB_l1] 200.1s
+[변형 V2_H_l0] 124.4s
+[변형 V2_H_l1] 135.3s
+[변형 V2_HB_l0] 218.9s
+[변형 V2_HB_l1] 221.5s
+[teacher 베이스라인 TEACHER_V1]
+[teacher 베이스라인 TEACHER_V2]
+저장: /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/results/E10/diam_loso.csv (450행)
+저장: /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/results/E10/edge_shift_raw.csv (72행)
+저장: /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/results/E10/ng_eval.csv (100행)
+limits: within_mount_um 2.925 edge_shift_px 1.407 scale 0.0260922506245771
