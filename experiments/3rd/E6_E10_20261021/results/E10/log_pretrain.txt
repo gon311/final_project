@@ -1,0 +1,31 @@
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO10_top.pt (n=10485, 218.7s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO2_top.pt (n=11050, 283.0s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO3_top.pt (n=11040, 159.2s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO4_top.pt (n=11050, 101.7s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO5_top.pt (n=11050, 102.5s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO6_top.pt (n=11050, 102.3s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO7_top.pt (n=10486, 99.2s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO8_top.pt (n=10494, 101.1s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO9_top.pt (n=10495, 100.7s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_ALL_top.pt (n=12150, 116.4s)
+top: 1385.9s
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO10_bot.pt (n=10485, 101.0s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO2_bot.pt (n=11050, 113.1s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO3_bot.pt (n=11040, 109.4s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO4_bot.pt (n=11050, 110.9s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO5_bot.pt (n=11050, 130.8s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO6_bot.pt (n=11050, 116.7s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO7_bot.pt (n=10486, 104.5s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO8_bot.pt (n=10494, 103.5s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_NO9_bot.pt (n=10495, 104.7s)
+[학습] /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/cache_E10/pretrain_ALL_bot.pt (n=12150, 123.6s)
+bottom: 1118.6s
+
+=== fold별 사전학습 OOF median|오차|(px) — E7 cv_metrics.csv 범위(top 0.008~0.035,
+    bottom/raw 0.012~0.059)와 같은 범위인지 sanity check ===
+          mean     min     max
+edge                          
+bottom  0.0962  0.0748  0.1325
+top     0.2114  0.1630  0.2421
+저장: /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/results/E10/pretrain_sanity.csv
+limits: within_mount_um 2.925 edge_shift_px 1.407 scale 0.0260922506245771
