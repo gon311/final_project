@@ -1,0 +1,29 @@
+저장: /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/results/E10/edge_shift.csv
+저장: /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/results/E10/summary.csv (11행)
+저장: /Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/results/E10/interpretation.csv
+
+=== summary.csv (model_direct 기준 핵심 열) ===
+         variant  MAE_um_model_direct  평균찍기대비_um  fold_win_count
+0_평균찍기(baseline)                 6.64       0.00             NaN
+      TEACHER_V1                 9.34       2.70             4.0
+      TEACHER_V2                 4.50      -2.14             5.0
+         V1_H_l0                 9.32       2.68             4.0
+         V1_H_l1                 9.34       2.70             4.0
+        V1_HB_l0                10.37       3.73             3.0
+        V1_HB_l1                10.31       3.67             3.0
+         V2_H_l0                 5.41      -1.23             5.0
+         V2_H_l1                 5.35      -1.29             5.0
+        V2_HB_l0                 5.89      -0.75             4.0
+        V2_HB_l1                 5.81      -0.83             4.0
+
+=== interpretation.csv ===
+ variant  cond1_mae_beats_repeatability  cond2_win_7of9  cond3_edge_shift_le_1p41px                          verdict
+ V1_H_l0                          False           False                        True 이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+ V1_H_l1                          False           False                        True 이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+V1_HB_l0                          False           False                        True 이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+V1_HB_l1                          False           False                        True 이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+ V2_H_l0                          False           False                        True 이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+ V2_H_l1                          False           False                        True 이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+V2_HB_l0                          False           False                        True 이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+V2_HB_l1                          False           False                        True 이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함
+limits: within_mount_um 2.925 edge_shift_px 1.407 scale 0.0260922506245771
