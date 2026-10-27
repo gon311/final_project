@@ -1,0 +1,2 @@
+n_groups,dx_range_px,slope,ci_lo,ci_hi,slope_main_only,slope_remount_only,slope_vs_time_px_per_min,corr_dx_time,median_split_half_diff_px,verdict
+10,1.46,1.15,0.724,1.346,1.15,,0.0822,0.982,0.57,"스파이크가 질감의 이동을 따라감 — 사진 좌표에 고정된 원인(센서·JPEG·ISP·렌즈 고정 패턴)에 불리, 장면(질감) 쪽 후보, 원인 판단 보류"
