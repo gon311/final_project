@@ -1,0 +1,4 @@
+variant,positive_control,no1_at_5857,no1_at_8265,verdict,status
+asrun,4/5,False,False,판단 불가,"실행 당시(지시서와 다름, 기록용)"
+strict,3/5,False,False,"양성 대조 미재현 — 방법 문제, 중단",사전 기준(지시서 문구 그대로)
+target,4/5,True,False,센서·렌즈·장면 쪽 (출력 좌표 고정 아님),사후 변경(결과를 본 뒤)
