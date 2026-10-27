@@ -65,7 +65,7 @@ def verdict(summ, cal_fpr, power):
     why = []
     if ctl < 4: why.append(f"양성 대조 {ctl}/5")
     if cal_fpr > 0.10: why.append(f"보정 오검출률 {cal_fpr:.2f} > 0.10")
-    if min(a.n, b.n) < NMIN: why.append("오프타겟 위치 수 부족")
+    if min(a.n_null, b.n_null) < NMIN: why.append("오프타겟 위치 수 부족")
     if why: return "판단 불가 (검정 조건 미충족: " + ", ".join(why) + ")"
     pa, pb = bool(a.present), bool(b.present)
     if pa and not pb and pw(8265) >= 0.8: return "5857 후보 검출·8265 미검출 — 센서·렌즈·장면 쪽 후보, 원인 판단 보류"
