@@ -98,7 +98,7 @@ n = 6의 기술통계이며 검정하지 않았다. Rz와 재장착 변동의 �
 실행 중 결정과 사후 변경은 모두 `PREREG_E11.md` 부록에 날짜와 함께 있다. 아래는 결과를 본 뒤의 변경·관찰이다.
 
 1. **E11-A 사후 민감도(24변형):** Codex 리뷰의 세 지적(within·cross 열 집합 불일치, NO8만 보간 평활, 오른쪽 끝열이 잔차에 남음)을 확인했다. NO3의 고유 성분 판정이 끝열 제외·matched에서 사라지고, NO8의 격자 시작점을 +1px로 바꾸면 S_spec이 약 56%(진폭 a_spec은 약 25%) 변한다. 결론 문장은 24가지 모두 같다(ρ −0.68\~+0.02, 단측 p 0.49\~0.98).
-2. **끝열(x = 8265) 급락:** NO3·NO7·NO10의 오른쪽 끝열이 −50\~−67µm로 급락한다. 끝열의 밝기 대비는 내부와 비슷해(185\~200 vs 약 198) 측정 이상의 증거는 없지만 실제 표면인지도 확정하지 못했다.
+2. **끝열(x = 8265) 급락 → 사진 쪽 고정 패턴(원영상 확인, 2026-10-27):** NO3·NO7·NO10의 오른쪽 끝열이 −50\~−67µm로 급락한다. 원본 사진(EXIF 180° 회전 적용)에서 윗엣지를 1px 열 단위로 추적하니 x = 8265\~8266에 3\~5열 폭의 좁은 스파이크(깊이 14\~62µm)가 있고 그 바깥은 매끄럽게 이어진다. 이 스파이크는 NO8을 뺀 10개 시편에 모두 같은 열에 나타난다(`E11A_endspike.csv`, 시편당 5장). 시편마다 표면과 장착이 달라 실제 표면이면 같은 열에 생길 수 없으므로 **측정 구간 끝에 걸린 사진 쪽 고정 위치 아티팩트**로 본다. NO3·NO7·NO10만 지적된 것은 측정 구간이 이 열에서 끝났기 때문이다(NO5는 8258에서 끝나 피했다). 아랫엣지에는 같은 위치의 스파이크가 없다(최대 편차 열이 8254\~8283으로 흩어짐). 따라서 "끝열 제외" 변형(NO3의 고유 성분 판정이 사라짐)이 맞는 분석이고, 원 결과의 NO3 판정은 신뢰하지 않는다. 한계: 센서·렌즈·JPEG 중 원인은 가리지 못했고, 재장착·암막없음 사진과 시편당 5장 이후는 보지 않았다.
 3. **E11-C 사후 확장 격자:** PREREG 격자만으로는 "c ≥ ○○" 문장을 채울 수 없어 c = 0.6\~1.0을 추가했다.
 4. **E11-E 부분상관 p 삭제:** 순위 잔차를 직접 순열한 p가 부적절해 삭제했다(부분 ρ는 유지). 난수 소비 순서가 바뀌어 `p_two_sided`가 최대 0.011 달라졌다(몬테카를로 오차 범위).
 5. **E11-B 촬영 순서 교락, E11-E V1 오차–촬영 순서:** 폭(ρ +0.85)과 V1 오차(ρ −0.80) 모두 거칠기보다 촬영 순서와 강하게 움직인다. 10/21 보고서의 배율 드리프트(핀 px −0.19%)와 같은 방향의 관찰이다.
@@ -116,7 +116,7 @@ n = 6의 기술통계이며 검정하지 않았다. Rz와 재장착 변동의 �
 1. **마이크로미터 다점 측정:** 라벨 잡음 상한(c_max 0.26\~0.65)이 넓고 잡음 모형(sd = c·Rz)이 가정이라, 라벨 자체의 불확도를 직접 재야 한다(E11-C). 같은 시편의 여러 위치·각도를 재서 라벨 잡음과 거칠기의 관계를 측정한다.
 2. **시편 순서 무작위화와 기준 시편 반복 촬영:** E11-B의 폭(촬영 순서와 ρ +0.85)과 E11-E의 V1 오차(ρ −0.80)가 거칠기와 촬영 순서를 분리하지 못한다. 순서를 섞고 기준 시편을 시작·중간·끝에 반복해 드리프트와 시편 효과를 나눈다.
 3. **거칠기 측정 위치·각도 기록과 다점 측정:** 거칠기가 1위치 1회 값이고 각도 기록이 없어, 사진의 엣지 위치와 대응이 불명확하다(한계 1). 사진 구간과 같은 원주 위치에서 여러 번 재고 위치를 기록한다.
-4. **E11-A 끝열 원영상 확인(재촬영 아님):** x = 8265 부근의 급락이 실제 표면인지 측정 이상인지 원본 이미지로 확인한다(NO3 판정을 바꾸므로, 민감도 분석 2번).
+4. **끝열 제외 후 E11-A 주 결과 재산출:** 끝열 급락은 아티팩트로 확인됐으므로(3절 2번) x ≥ 8260을 뺀 결과를 주 결과로 다시 낼지 정한다(재촬영 불필요). 다음 촬영에서는 측정 구간이 x = 8265 부근에서 끝나지 않게 한다.
 5. **시편 수 확대:** n = 11에서 ρ = 0.5의 검출력이 약 1/3이라 "판단 불가"가 남았다. 시편을 늘려야 판정이 가능하다.
 
 ## 폴더 구성
@@ -125,8 +125,8 @@ n = 6의 기술통계이며 검정하지 않았다. Rz와 재장착 변동의 �
 |---|---|
 | `PREREG_E11.md`, `EXPERIMENTS_E11_roughness_for_ClaudeCode.md` | 사전 등록 규칙(부록에 실행 중 결정·사후 변경), 지시서 |
 | `data/roughness_raw.csv` | 거칠기 원본 |
-| `code/` | `paths.py`, `load_roughness.py`, `load_edges.py`, `e11_0_checks.py`, `e11a_edge_texture.py`, `e11a_sensitivity.py`, `e11b_edge_sharpness.py`, `e11c_label_noise.py`, `e11e_error_vs_roughness.py`, `e11f_remount.py` |
-| `results/` | `roughness_clean.csv`, `E11_0_checks.csv`, `E11A_*`(by_specimen, cross_pairs, remount, summary, spectrum, spectrum_8px, sens_summary, sens_by_specimen, endcols), `E11B_*`, `E11C_*`(upper_bound, whatif, conclusion), `E11E_*`(corr, loso, summary), `E11F_remount.csv` |
+| `code/` | `paths.py`, `load_roughness.py`, `load_edges.py`, `e11_0_checks.py`, `e11a_edge_texture.py`, `e11a_sensitivity.py`, `e11a_endspike.py`, `e11b_edge_sharpness.py`, `e11c_label_noise.py`, `e11e_error_vs_roughness.py`, `e11f_remount.py` |
+| `results/` | `roughness_clean.csv`, `E11_0_checks.csv`, `E11A_*`(by_specimen, cross_pairs, remount, summary, spectrum, spectrum_8px, sens_summary, sens_by_specimen, endcols, endspike), `E11B_*`, `E11C_*`(upper_bound, whatif, conclusion), `E11E_*`(corr, loso, summary), `E11F_remount.csv` |
 | `figures/` | `E11A_residual_examples.png`, `E11A_aspec_vs_Rz.png`, `E11B_esf_overlay.png`, `E11B_width_vs_Ra.png`, `E11C_pass_prob_vs_c.png` |
 | `cache/` | 열 단위 긴 표 `edges_long.csv.gz`(gitignore, 커밋 안 함). 원 캐시 `profiles_1021.npz`는 저장소 밖(환경변수 `E11_PROFILES`로 경로 지정) |
 
@@ -136,6 +136,7 @@ n = 6의 기술통계이며 검정하지 않았다. Rz와 재장착 변동의 �
 cd experiments/3rd/roughness/code
 python3 load_roughness.py && python3 load_edges.py && python3 e11_0_checks.py     # Homebrew python3
 /usr/bin/python3 e11a_edge_texture.py && /usr/bin/python3 e11a_sensitivity.py       # matplotlib 필요
+python3 e11a_endspike.py                                                           # 원본 사진 필요(저장소 밖), 약 30초
 /usr/bin/python3 e11b_edge_sharpness.py && /usr/bin/python3 e11c_label_noise.py
 /usr/bin/python3 e11e_error_vs_roughness.py
 python3 e11f_remount.py
