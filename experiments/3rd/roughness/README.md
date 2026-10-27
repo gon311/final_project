@@ -1,6 +1,6 @@
 # E11 표면거칠기 실험 (진행 중)
 
-규칙은 `PREREG_E11.md`, 구현 지시는 `EXPERIMENTS_E11_roughness_for_ClaudeCode.md`. 새 측정 없이 10/21 결과와 캐시만 쓴다. 이 보고서는 단계가 끝날 때마다 채우고, E11-R에서 완성한다. **진행: E11-0 ✔, E11-A ✔, E11-B ✔, E11-C ✔, E11-E ✔, E11-F·E11-R 미완.**
+규칙은 `PREREG_E11.md`, 구현 지시는 `EXPERIMENTS_E11_roughness_for_ClaudeCode.md`. 새 측정 없이 10/21 결과와 캐시만 쓴다. 이 보고서는 단계가 끝날 때마다 채우고, E11-R에서 완성한다. **진행: E11-0 ✔, E11-A ✔, E11-B ✔, E11-C ✔, E11-E ✔, E11-F ✔, E11-R(종합 보고서) 미완.**
 
 ## 0. 결론 (현재까지)
 
@@ -54,6 +54,10 @@
 - 촬영 순서: V1 부호 있는 오차와 촬영 순서의 ρ = −0.80으로, V1 오차는 거칠기보다 촬영 순서와 더 강하게 움직인다(순서 통제 부분 ρ는 Rz +0.30, Ra +0.11; 부분 ρ의 p는 근거가 부족해 내지 않았다). 이 값들도 n = 9 탐색이다.
 - 한계: n = 9에서 Rz 항(파라미터 3개를 8점에 적합)은 과적합하기 쉽다. 이 단계는 "거칠기가 오차를 설명한다"는 가설을 지지하지 않는다는 기록이며, 설명하지 않는다는 증명이 아니다.
 
+### E11-F 재장착 변동 vs 거칠기 (서술, 검정 없음, `results/E11F_remount.csv`)
+- 재현: NO7~NO12 6시편의 장착 6점(본시험 10장 중앙값 1점 + 재장착 1장씩 5점) 시편 내 σ의 시편 간 중앙값이 원시 cross50 5.18µm, 핀 비율 보정 6.36µm로 10/21 값(5.2·6.4µm)을 재현했다(assert 통과, 스케일 0.0260923 mm/px).
+- Rz 순서로 늘어놓으면(시편: 원시 σ / 핀 비율 σ µm) NO9(Rz 6.0): 5.3 / 3.6, NO8(6.8): 5.2 / 5.0, NO12(8.0): 5.2 / 6.1, NO11(9.2): 4.6 / 8.5, NO7(9.4): 7.2 / 6.6, NO10(16.4): 2.4 / 7.5이다. n = 6의 기술통계이며 검정하지 않았다. Rz와 재장착 변동의 관계는 판단하지 않는다. NO10은 핀 σ가 0.20px로 6시편 중 가장 작지만 베어링·핀 px가 반대로 움직여(상관 −0.23) 핀 비율 보정 후 σ가 원시 σ보다 커진다(Codex 리뷰의 재계산 확인: 이상치·장착 대응 오류의 근거는 없다).
+
 ## 3. 한계
 
 - 시편 11개(오차 분석은 9개), 한 세션, 거칠기는 시편당 1회·1위치 측정. 이미지가 보는 것은 장파장 성분뿐이다.
@@ -62,4 +66,4 @@
 
 ## 4. 파일
 
-`code/`(`paths.py`, `load_*.py`, `e11_0_checks.py`, `e11a_edge_texture.py`, `e11a_sensitivity.py`, `e11b_edge_sharpness.py`, `e11c_label_noise.py`, `e11e_error_vs_roughness.py`), `results/`, `figures/`. 재현: `code/`에서 `/usr/bin/python3 e11a_edge_texture.py`, `e11a_sensitivity.py`, `e11b_edge_sharpness.py`, `e11c_label_noise.py`, `e11e_error_vs_roughness.py`(matplotlib 필요). E11-0은 Homebrew python3로 실행했다.
+`code/`(`paths.py`, `load_*.py`, `e11_0_checks.py`, `e11a_edge_texture.py`, `e11a_sensitivity.py`, `e11b_edge_sharpness.py`, `e11c_label_noise.py`, `e11e_error_vs_roughness.py`, `e11f_remount.py`), `results/`, `figures/`. 재현: `code/`에서 `/usr/bin/python3 e11a_edge_texture.py`, `e11a_sensitivity.py`, `e11b_edge_sharpness.py`, `e11c_label_noise.py`, `e11e_error_vs_roughness.py`(matplotlib 필요). E11-0은 Homebrew python3로 실행했다.
