@@ -1,6 +1,6 @@
 # E11 표면거칠기 실험 (진행 중)
 
-규칙은 `PREREG_E11.md`, 구현 지시는 `EXPERIMENTS_E11_roughness_for_ClaudeCode.md`. 새 측정 없이 10/21 결과와 캐시만 쓴다. 이 보고서는 단계가 끝날 때마다 채우고, E11-R에서 완성한다. **진행: E11-0 ✔, E11-A ✔, E11-B 이후 미완.**
+규칙은 `PREREG_E11.md`, 구현 지시는 `EXPERIMENTS_E11_roughness_for_ClaudeCode.md`. 새 측정 없이 10/21 결과와 캐시만 쓴다. 이 보고서는 단계가 끝날 때마다 채우고, E11-R에서 완성한다. **진행: E11-0 ✔, E11-A ✔, E11-B ✔, E11-C 이후 미완.**
 
 ## 0. 결론 (현재까지)
 
@@ -34,6 +34,12 @@
   3. 오른쪽 끝열(x = 8265)이 NO3·NO7·NO10에서 −50~−67µm로 급락하고, 이 한 열이 NO3의 판정을 바꾼다. 끝열의 밝기 대비는 내부와 비슷해(185~200 vs 약 198) 측정 이상의 증거는 없지만 실제 표면인지도 확정하지 못했다(원영상 확인 필요).
   - 변형 24가지에서 ρ(Rz, a_spec_top) −0.68~+0.02, 단측 p 0.49~0.98.
 
+### E11-B 엣지 선명도 vs Ra (탐색, `results/E11B_*.csv`, `figures/E11B_*.png`)
+- 윗엣지 10–90% 폭(주 분석, Gaussian σ1.2 평활 적용)은 시편 간 24~26px(약 620~690µm)이고, ρ(Ra, 폭) = −0.49(단측 p = 0.94, n = 11, 탐색)로 거칠수록 넓다는 방향이 아니다. Rz와는 ρ = −0.76.
+- **촬영 순서 교락:** 폭과 촬영 순서의 ρ = +0.85(|ρ| ≥ 0.5 → 촬영 순서(배율 드리프트) 교락 가능). 폭은 촬영 순서대로 늘어난다(NO2 24.3 → NO12 26.5px). 따라서 폭의 시편 간 차이는 거칠기보다 촬영 순서로 설명될 여지가 크다.
+- 아랫엣지(보조): 폭 18.7~21.4px, ρ(Ra, 폭) = −0.26. 평활 없는 프로파일(부차)에서도 윗엣지 ρ(Ra, 폭) = −0.55로 같은 방향이다.
+- 한계: ESF의 90% 지점이 배경쪽의 완만한 어깨(u ≈ −12px)에 있어 배경 수준 추정에 민감하다. 절대 폭은 해석하지 않고, 이 단계에서 윗엣지 label은 cross50이라 u = 0이 0.5 수준과 정확히 겹치도록 평활을 맞췄다.
+
 ## 3. 한계
 
 - 시편 11개(오차 분석은 9개), 한 세션, 거칠기는 시편당 1회·1위치 측정. 이미지가 보는 것은 장파장 성분뿐이다.
@@ -42,4 +48,4 @@
 
 ## 4. 파일
 
-`code/`(`paths.py`, `load_*.py`, `e11_0_checks.py`, `e11a_edge_texture.py`, `e11a_sensitivity.py`), `results/`, `figures/`. 재현: `code/`에서 `/usr/bin/python3 e11a_edge_texture.py`, `e11a_sensitivity.py`(matplotlib 필요). E11-0은 Homebrew python3로 실행했다.
+`code/`(`paths.py`, `load_*.py`, `e11_0_checks.py`, `e11a_edge_texture.py`, `e11a_sensitivity.py`, `e11b_edge_sharpness.py`), `results/`, `figures/`. 재현: `code/`에서 `/usr/bin/python3 e11a_edge_texture.py`, `e11a_sensitivity.py`, `e11b_edge_sharpness.py`(matplotlib 필요). E11-0은 Homebrew python3로 실행했다.
