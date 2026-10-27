@@ -1,0 +1,2 @@
+n_img,valid_frac,saturated_cols,dark_cols,target_T_graylevel,n_null,p_shift,present,n_null_left,n_null_right,le_target_left,le_target_right,n_pseudo,n_pseudo_hit,pseudo_hit_rate
+110,1.0,0,0,1.824,4979,0.3297,False,2255,2724,536,1105,991,50,0.05

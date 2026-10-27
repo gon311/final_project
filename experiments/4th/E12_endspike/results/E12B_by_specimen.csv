@@ -1,0 +1,12 @@
+specimen,n_img,target_T_graylevel,p_shift,present
+NO2,10,1.983,0.3088,False
+NO3,10,1.761,0.3739,False
+NO4,10,2.214,0.2564,False
+NO5,10,1.381,0.5367,False
+NO6,10,1.626,0.4442,False
+NO7,10,1.985,0.3191,False
+NO8,10,1.881,0.3703,False
+NO9,10,2.196,0.2584,False
+NO10,10,2.386,0.2038,False
+NO11,10,2.37,0.2249,False
+NO12,10,2.224,0.2422,False

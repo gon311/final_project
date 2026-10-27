@@ -1,0 +1,6 @@
+python 3.9.6
+numpy 2.0.2
+pandas 2.3.3
+Pillow 11.3.0
+matplotlib 3.9.4
+seed: 난수 사용 없음

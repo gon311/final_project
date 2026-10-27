@@ -1,0 +1,2 @@
+verdict,n_top_present,n_bot_present,sign_same_top_bot
+판단 불가 (스파이크 재현 시편 0 < 6),0,0,1/11

@@ -1,0 +1,8 @@
+specimen,window_center,n_img,x_peak,dev_px,dev_um,found_asrun,found_strict,found_target,target_x,target_dev_px,n_off_target_runs,n_cols,near_8265,near_5857
+NO3,8265,5,8193,-1.19,-31,True,True,True,8266.0,-0.98,3,250,False,False
+NO5,8265,5,8266,-1.61,-42,True,True,True,8266.0,-1.61,2,250,True,False
+NO7,8265,5,8266,-0.73,-19,True,False,False,,,1,250,True,False
+NO9,8265,5,8265,-1.24,-32,True,True,True,8265.0,-1.24,0,250,True,False
+NO10,8265,5,8266,-2.26,-59,True,True,True,8266.0,-2.26,0,250,True,False
+NO1,5857,10,5868,-1.78,-46,True,True,True,5857.0,-0.84,4,250,False,False
+NO1,8265,10,8306,-0.88,-23,True,False,False,,,3,250,False,False
