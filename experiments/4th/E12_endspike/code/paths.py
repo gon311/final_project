@@ -10,3 +10,7 @@ RESULTS = E12 / "results"
 FIGURES = E12 / "figures"
 SEED = 42
 UM_PER_PX = 26.092
+# 열별 프로파일 캐시(저장소 밖, 읽기 전용): 사진별 윗엣지 중심 y(top_center)를 얻는 데만 쓴다.
+PROFILES = Path(os.environ.get(
+    "E12_PROFILES",
+    "/Volumes/Lexar/Final/Claude outputs/20261021_3차_E6_E10/_tmp/profiles_1021.npz"))
