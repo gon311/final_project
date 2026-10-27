@@ -36,3 +36,21 @@ def window_edges(g, xc, rows):
 
 def load(row):
     return np.asarray(ImageOps.exif_transpose(Image.open(PHOTOS / row.folder / row.filename)).convert("L"), float)
+
+
+def window_edges_track(g, xc, rows, half=15):
+    """window_edges와 같은 산술이지만 창 중앙에서 좌우로 엣지를 따라간다(직전 열의 y ± half).
+    경사진 엣지가 고정 ±20px 창을 벗어나 NaN이 생기는 것을 줄인다(E12-A2 Codex 리뷰)."""
+    r0, r1 = rows
+    y0 = first_cross(g[r0:r1, xc - 1:xc + 2].mean(1))
+    if y0 is None: return None
+    out = np.full(2 * W, np.nan)
+    for order in (range(xc, xc + W), range(xc - 1, xc - W - 1, -1)):
+        yp = int(r0 + y0)
+        for x in order:
+            lo = yp - half
+            e = first_cross(g[lo:yp + half + 1, x])
+            if e is not None:
+                out[x - (xc - W)] = e + lo
+                yp = int(round(e + lo))
+    return out - np.nanmedian(out)
