@@ -1,0 +1,2 @@
+status,reproduced_variants,representative_mad,repro_row,cv_rho_with_NO9,cv_rho_without_NO9,cv_size_ratio_median
+엣지 추출 방식 차이로 수치 재현 불가,,MAD_med,MAD_med|pts|none (창 H),0.36363636363636365,0.3939393939393939,0.3659388720486441
