@@ -86,7 +86,7 @@
   2. 시편 대표값을 구한다. 이미지 단위 후보는 이미지 중앙값, R4·R5는 시편 프로파일에서 바로 구한다. 사진 선택 all·burst 둘 다 → `results/E14_by_specimen.csv`.
   3. 후보 × {방식 3, 방식 4} × {all, burst}마다 정상 9시편 LOSO를 돌린다 → `results/E14_loso.csv`(MAE, MAX, 시편별 err_um, NG 2시편 예측값).
   4. 무작위화 검정(PREREG 5.1절, 방식 3, all) → `results/E14_tests.csv`.
-     - 주 비교 2개(R2 vs R1, R3 vs R2): T, 단측 p, Holm p, MAE 감소, "개선" 판정.
+     - 주 비교 2개(R2 vs R1, R3 vs R2): T, 단측 p, 보정 Holm 판정(작은 p ≤ 9/512, 그다음 ≤ 20/512, PREREG 5.2절), MAE 감소, "개선" 판정.
      - 기술 비교(R0 vs R1·R2L·R3L·R2·R3, R3 vs R1, R4·R5 vs R1): T와 p만 적고, 판정란에 "기술"이라고 쓴다.
 - **완료 기준:** 4개 파일, PREREG 5.2절 형식의 판정 문장, E14-0 검정력 표를 인용한 해석 한 줄.
 
