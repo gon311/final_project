@@ -454,8 +454,362 @@ def step2():
     print(piv.round(2).to_string())
 
 
+INK, INK2, GRID = "#0b0b0b", "#52514e", "#d9d8d4"
+S1, S2, S3, S4, S5 = "#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"  # dataviz 기본 범주 순서
+DEMO_FILE = "20261021_153554.jpg"  # NO2 본시험 첫 장 (그림 1·2 예시)
+
+
+def _plt():
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    plt.rcParams.update({"font.family": ["AppleGothic", "DejaVu Sans"], "axes.unicode_minus": False,
+                         "axes.edgecolor": INK2, "axes.labelcolor": INK, "xtick.color": INK2, "ytick.color": INK2,
+                         "axes.spines.top": False, "axes.spines.right": False, "font.size": 10})
+    return plt
+
+
+def _demo_gray(v):
+    """측정(cv2.imread)과 같은 좌표계: EXIF 회전(이 사진들은 orientation 3 = 180°)을 적용한 회색조."""
+    from PIL import Image, ImageOps
+    from paths import RAW_1021
+    Image.MAX_IMAGE_PIXELS = None  # 16320x7532 원본, 신뢰하는 내부 자료
+    return ImageOps.exif_transpose(Image.open(RAW_1021 / v.folder / DEMO_FILE)).convert("L")
+
+
+def fig_overlay(m):
+    """그림 1: 실제 사진 위 측정 구간(베어링 구간, W1·W2·W3, 31개소)과 열별 엣지 확대."""
+    plt = _plt()
+    g = m[m.filename == DEMO_FILE].sort_values("x")
+    v = pd.read_csv(RES1021 / "values_by_image_1021.csv", encoding="utf-8-sig").set_index("filename").loc[DEMO_FILE]
+    _, th, xm, x, _ = per_image(g)
+    L = (x.max() - x.min()) / 0.6  # measure_section은 베어링 구간 양끝 20%를 뺀다 → W1 = 0.6·구간
+    sec = (xm - L / 2, xm + L / 2)
+    px = lambda mm: mm / SCALE
+    x0, x1 = int(xm - px(6.5)), int(xm + px(6.5))
+    y0, y1 = int(v.bearing_top_y - 140), int(v.bearing_bot_y + 140)
+    full = _demo_gray(v)
+    im = np.asarray(full.crop((x0, y0, x1, y1)))
+
+    fig = plt.figure(figsize=(12, 7.6))
+    ph = 0.60  # 사진 축 높이(그림 비율). 가로는 실제 종횡비를 지키도록 계산
+    pw = ph * 7.6 * (x1 - x0) / (y1 - y0) / 12
+    ax = fig.add_axes([0.05, 0.33, pw, ph])
+    ax.imshow(im, cmap="gray", extent=(x0, x1, y1, y0), vmin=0, vmax=255)
+    bands = [(x.min(), x.max(), S1, f"W1 측정 창 {(x.max() - x.min()) * SCALE:.1f}mm — 111열 (R0·R1)"),
+             (xm - px(W2_MM), xm + px(W2_MM), S2, f"W2 ±{W2_MM:.2f}mm — 중앙 10개소 상당 (R2)"),
+             (xm - px(W3_MM), xm + px(W3_MM), S3, f"W3 ±{W3_MM:.2f}mm — 중앙 5개소 상당 (R3)")]
+    for a, b, c, _ in bands:
+        ax.axvspan(a, b, color=c, alpha=0.22, lw=0)
+    # 31개소(멘토 설명: 10.2mm에 고르게)는 사진을 가리지 않게 축 바깥 배경 쪽에만 짧게
+    x31 = xm + px(np.linspace(-5.1, 5.1, 31))
+    ax.vlines(x31, y0, v.bearing_top_y - 8, color=S4, lw=1.1)
+    ax.vlines(x31, v.bearing_bot_y + 8, y1, color=S4, lw=1.1)
+    for xs_ in sec:
+        ax.axvline(xs_, color="white", lw=1.3, ls="--")
+    zx, zy = (xm - px(0.5), xm + px(0.5)), (v.bearing_top_y - 25, v.bearing_top_y + 25)
+    ax.add_patch(plt.Rectangle((zx[0], zy[0]), zx[1] - zx[0], zy[1] - zy[0], fill=False, ec="white", lw=1.5))
+    ax.set_xlim(x0, x1)
+    ax.set_ylim(y1, y0)
+    ax.tick_params(labelbottom=False, bottom=False)
+    ax.set_yticks([])
+    ax.set_title(f"측정 구간 — NO2 실제 사진\n(10/21, {DEMO_FILE}, 실제 비율)", loc="left", color=INK, fontsize=10)
+
+    # 사진 아래 구간 막대: 각 창의 폭을 mm 눈금 위에 나란히 (사진과 같은 x축)
+    ab = fig.add_axes([0.05, 0.07, pw, 0.24], sharex=ax)
+    rows = [(sec[0], sec[1], "white", f"베어링 구간 (검출 ≈{L * SCALE:.1f}mm, 흰 점선)")] + bands
+    for i, (a, b, c, lab) in enumerate(rows):
+        yy = len(rows) - i
+        ab.plot([a, b], [yy, yy], color=c if c != "white" else INK2, lw=6, solid_capstyle="butt")
+        ab.text(x1 + px(0.15), yy, lab, va="center", fontsize=8.5, color=INK)
+    ab.plot(x31, [0] * 31, "|", ms=9, mew=1.3, color=S4)
+    ab.text(x1 + px(0.15), 0, "31개소 — 10.2mm 균등 (멘토 설명, 노란 선)", va="center", fontsize=8.5, color=INK)
+    ab.set_ylim(-0.8, len(rows) + 0.8)
+    ab.set_yticks([])
+    ab.spines["left"].set_visible(False)
+    ticks = np.arange(-6, 6.1, 2)
+    ab.set_xticks(xm + px(ticks), [f"{t:+.0f}" if t else "0" for t in ticks])
+    ab.set_xlabel("창 중앙 기준 위치 (mm)")
+
+    # 확대: 윗엣지 ±0.5mm, 열마다 cross50 엣지 점과 W1 강건 직선
+    az = fig.add_axes([0.52, 0.45, 0.45, 0.45])
+    zi = np.asarray(full.crop((int(zx[0]), int(zy[0]), int(zx[1]), int(zy[1]))))
+    az.imshow(zi, cmap="gray", extent=(int(zx[0]), int(zx[1]), int(zy[1]), int(zy[0])), vmin=0, vmax=255, aspect="auto")
+    sel = (g.x >= zx[0]) & (g.x <= zx[1])
+    for xc in g.x[sel]:
+        az.axvline(xc, color=S1, lw=0.4, alpha=0.6)
+    az.plot(g.x[sel], g.y_top[sel], "o", ms=3.5, color=S4, mec="#000", mew=0.4, label="열별 엣지 (cross50, 서브픽셀)")
+    pt = robust_fit(x, g.y_top.to_numpy())
+    xx = np.array(zx)
+    az.plot(xx, np.polyval(pt, xx), color=S2, lw=2, label="W1 강건 직선적합 (R0의 윗변)")
+    az.set_xlim(*zx)
+    az.set_ylim(zy[1], zy[0])
+    az.set_xticks([])
+    az.set_yticks([])
+    az.set_title("확대(흰 사각형): 윗엣지 ±0.5mm, 2px 간격 열", loc="left", fontsize=9, color=INK)
+    az.legend(loc="upper center", bbox_to_anchor=(0.5, -0.03), fontsize=8, frameon=False)
+    fig.text(0.52, 0.30, f"스케일 {SCALE * 1000:.1f}µm/px · 직경 ≈ {v.bearing_cross50_px:.0f}px ≈ 20mm\n"
+                         "열 직경 d(x) = (아랫엣지 − 윗엣지) · cos θ\n"
+                         "R0 = 위·아래 직선적합의 창 중앙 거리 · R1~R3 = 창 안 d(x)의 평균",
+             fontsize=8.5, color=INK2)
+    fig.savefig(FIGURES / "E14_fig1_overlay.png", dpi=110)
+    plt.close(fig)
+
+
+def fig_representatives(m):
+    """그림 2: 대표값 만드는 법. (a) 이미지 1장의 d(x)와 R0~R3, (b) 시편 프로파일과 R4·R5."""
+    plt = _plt()
+    g = m[m.filename == DEMO_FILE]
+    r = image_candidates(g)
+    _, _, xm, x, d = per_image(g)
+    dx = (x - xm) * SCALE
+    base = r["R0"]
+    um = lambda p: (p - base) * SCALE * 1000
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11, 4.3), sharey=True, gridspec_kw=dict(width_ratios=[1, 1]))
+    for ax in (a1, a2):
+        ax.axvspan(-W2_MM, W2_MM, color=S2, alpha=0.08, lw=0)
+        ax.axvspan(-W3_MM, W3_MM, color=S3, alpha=0.14, lw=0)
+        ax.axhline(0, color=GRID, lw=0.8)
+        ax.set_xlabel("창 중앙 기준 위치 (mm)")
+    a1.plot(dx, um(d), "o", ms=3, color="#8a8984", label="열 직경 d(x) (111열)")
+    span = {"R0": (dx.min(), dx.max()), "R1": (dx.min(), dx.max()), "R2": (-W2_MM, W2_MM), "R3": (-W3_MM, W3_MM)}
+    lab = {"R0": "R0 직선적합 (현재)", "R1": "R1 전체 평균", "R2": "R2 중앙 10개소 평균", "R3": "R3 중앙 5개소 평균"}
+    for k, c, ls, z in (("R1", S1, "-", 3), ("R2", S2, "-", 3), ("R3", S3, "-", 3), ("R0", INK, (0, (4, 3)), 4)):
+        a1.plot(span[k], [um(r[k])] * 2, color=c, lw=2.2, ls=ls, zorder=z, label=f"{lab[k]} {um(r[k]):+.1f}µm")
+    a1.set_ylabel("R0 대비 (µm)")
+    a1.set_ylim(-62, 78)
+    a1.set_title(f"(a) 이미지 1장 — NO2 {DEMO_FILE}", loc="left", fontsize=10)
+    a1.legend(fontsize=8, frameon=False, loc="upper center", ncol=2)
+
+    col = columns(m[m.specimen == "NO2"])
+    _, P = profile(col)
+    P = P.loc["NO2"]
+    r0s = img_r0 = np.median([per_image(h)[0] for _, h in m[m.specimen == "NO2"].groupby("filename")])
+    pu = P.to_numpy() - r0s * SCALE * 1000
+    bc = (P.index.to_numpy() + 0.5) * BIN_MM
+    a2.plot(bc, pu, "-o", ms=3, lw=1, color="#8a8984", label="시편 프로파일 P(b) (10장 중앙값, 0.1mm 구간)")
+    for q, c, nm in ((np.quantile(pu, 0.9), S4, "R4 90% 분위수 (탐색)"), (pu.max(), S5, "R5 최댓값 (탐색)"),
+                     (np.median(pu), INK, "참고: P의 중앙값")):
+        a2.axhline(q, color=c, lw=2 if c != INK else 1, ls="-" if c != INK else ":", label=f"{nm} {q:+.1f}µm")
+    a2.set_title("(b) 시편 단위 — NO2 프로파일과 마이크로미터식 후보", loc="left", fontsize=10)
+    a2.legend(fontsize=8, frameon=False, loc="upper center")
+    a2.annotate("양끝 열 상승\n(11시편 공통)", xy=(-2.8, pu[0]), xytext=(-2.2, pu[0] + 5), fontsize=8, color=INK2,
+                arrowprops=dict(arrowstyle="-", color=INK2, lw=0.8))
+    fig.text(0.5, 0.005, "주황 음영 = W2(±1.53mm), 초록 음영 = W3(±0.68mm). 같은 θ·창 중앙을 모든 후보가 공유한다.",
+             ha="center", fontsize=8.5, color=INK2)
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    fig.savefig(FIGURES / "E14_fig2_representatives.png", dpi=110)
+    plt.close(fig)
+
+
+def fig_results():
+    """그림 4: MAE 비교 + 시편별 |오차| 기울기. 그림 5: 실측 vs 예측(공차 띠, NG)."""
+    plt = _plt()
+    lo = pd.read_csv(RESULTS / "E14_loso.csv")
+    te = pd.read_csv(RESULTS / "E14_tests.csv").set_index("비교")
+    bs = pd.read_csv(RESULTS / "E14_by_specimen.csv")
+    a = lo[(lo.사진선택 == "all") & (lo.방식 == "3_V1고정")].set_index("후보")
+    order = ["R0", "R1", "R2", "R3"]
+    names = {"R0": "R0\n직선적합(현재)", "R1": "R1\n전체 평균", "R2": "R2\n중앙 10개소", "R3": "R3\n중앙 5개소"}
+
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11, 4.4), gridspec_kw=dict(width_ratios=[1, 1.15]))
+    xs = np.arange(len(order))
+    a1.axhline(E6_MAE["0_평균찍기"], color=INK2, ls="--", lw=1)
+    a1.text(1.5, E6_MAE["0_평균찍기"] - 0.2, f"참고: 평균찍기 {E6_MAE['0_평균찍기']:.2f}µm", ha="center",
+            va="top", fontsize=8.5, color=INK2)
+    cols = [INK2, S1, S2, S3]
+    for i, k in enumerate(order):
+        a1.plot([i, i], [0, a.loc[k, "MAE_um"]], color=cols[i], lw=3, solid_capstyle="round")
+        a1.plot(i, a.loc[k, "MAE_um"], "o", ms=9, color=cols[i])
+        a1.text(i, a.loc[k, "MAE_um"] + 0.25, f"{a.loc[k, 'MAE_um']:.2f}", ha="center", fontsize=9, color=INK)
+    for (i, j, key) in ((1, 2, "R2 vs R1"), (2, 3, "R3 vs R2")):
+        yb = max(a.loc[order[i], "MAE_um"], a.loc[order[j], "MAE_um"]) + 0.9
+        a1.annotate("", xy=(j, yb), xytext=(i, yb), arrowprops=dict(arrowstyle="->", color=INK2, lw=0.9))
+        a1.text((i + j) / 2, yb + 0.12, f"p={te.loc[key, 'p_단측']:.2f}\n구분 불가", ha="center", fontsize=8, color=INK)
+    a1.set_xticks(xs, [names[k] for k in order], fontsize=8.5)
+    a1.set_ylim(0, 11.5)
+    a1.set_ylabel("정상 9시편 LOSO MAE (µm)")
+    a1.set_title("(a) 창을 좁히면 MAE가 줄었나 — 방식 3, all", loc="left", fontsize=10)
+
+    errs = np.abs(a.loc[["R1", "R2", "R3"], [f"err_{s}" for s in NORMAL]].to_numpy())  # 3 x 9
+    ly = {}  # 라벨이 겹치지 않게 최소 간격 0.9µm로 위로 민다
+    for j in np.argsort(errs[2]):
+        y = errs[2, j]
+        if ly:
+            y = max(y, max(ly.values()) + 0.9)
+        ly[j] = y
+    for j, s in enumerate(NORMAL):
+        a2.plot([0, 1, 2], errs[:, j], "-o", ms=4, lw=1, color="#a8a7a2")
+        a2.text(2.06, ly[j], s, fontsize=7.5, va="center", color=INK2)
+    a2.plot([0, 1, 2], errs.mean(1), "-o", ms=7, lw=2.5, color=S1, label="평균(=MAE)")
+    a2.set_xticks([0, 1, 2], ["R1 전체", "R2 중앙 10", "R3 중앙 5"])
+    a2.set_xlim(-0.2, 2.35)
+    a2.set_ylabel("시편별 |오차| (µm)")
+    a2.set_title("(b) 시편별로 보면 — 일관된 감소가 없다", loc="left", fontsize=10)
+    a2.legend(frameon=False, fontsize=8.5, loc="upper left")
+    fig.tight_layout()
+    fig.savefig(FIGURES / "E14_fig4_mae.png", dpi=110)
+    plt.close(fig)
+
+    truth = bs[bs.사진선택 == "all"].set_index("specimen")["실측mm"]
+    fig, axs = plt.subplots(1, 3, figsize=(11.5, 4.2), sharex=True, sharey=True)
+    lim = (19.94, 20.06)
+    for ax, k, c in zip(axs, ["R1", "R2", "R3"], [S1, S2, S3]):
+        ax.axhspan(C.TOL_LO, C.TOL_HI, color=S3, alpha=0.10, lw=0)
+        ax.axvspan(C.TOL_LO, C.TOL_HI, color=GRID, alpha=0.35, lw=0)
+        ax.plot(lim, lim, color=INK2, lw=0.8, ls=":")
+        pr = {s: truth[s] + a.loc[k, f"err_{s}"] / 1000 for s in NORMAL}
+        ax.plot([truth[s] for s in NORMAL], [pr[s] for s in NORMAL], "o", ms=7, color=c, mec="white", mew=1,
+                label="정상 9 (LOSO 예측)")
+        for s, mk in (("NO11", "v"), ("NO12", "^")):
+            p = a.loc[k, f"pred_{s}"]
+            ok = C.judge(p) == "OK"
+            ax.plot(truth[s], p, mk, ms=10, color="white" if ok else INK, mec=INK, mew=1.5,
+                    label=None)
+            ax.annotate(f"{s} {'OK → 놓침' if ok else 'NG 검출'}", (truth[s], p),
+                        xytext=(0, 13) if s == "NO12" else (8, 8),
+                        textcoords="offset points", ha="center" if s == "NO12" else "left", fontsize=8,
+                        color=S2 if ok else INK, fontweight="bold" if ok else "normal")
+        ax.set_xlim(lim)
+        ax.set_ylim(lim)
+        ax.set_title(f"{k}  MAE {a.loc[k, 'MAE_um']:.2f}µm", loc="left", fontsize=10)
+        ax.set_xlabel("마이크로미터 실측 (mm)")
+    axs[0].set_ylabel("이미지 예측 (mm, 방식 3)")
+    axs[0].legend(frameon=False, fontsize=8, loc="upper left")
+    fig.text(0.5, 0.005, "초록 띠 = 예측이 공차(20.010~20.030mm) 안 → OK 판정. 회색 세로 띠 = 실측이 공차 안. "
+                         "NG 2개(▼NO11, ▲NO12)는 정상 9시편 전체로 맞춘 식의 예측. 흰 기호 = 불량을 OK로 놓친 경우.",
+             ha="center", fontsize=8, color=INK2)
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
+    fig.savefig(FIGURES / "E14_fig5_pred_vs_true.png", dpi=110)
+    plt.close(fig)
+
+
+def fig_profile():
+    """그림 6: 열별 프로파일 — 시편별(회색)과 11시편 공통 패턴(굵은 선)."""
+    plt = _plt()
+    pr = pd.read_csv(RESULTS / "E14_profile.csv")
+    pa = pr[pr["mount"] == "all"]
+    w = pa.pivot(index="b_center_mm", columns="specimen", values="P_rel_um")
+    common_pat = w.median(axis=1)
+    fig, ax = plt.subplots(figsize=(10, 4.8))
+    ax.axhspan(-2.9, 2.9, color=GRID, alpha=0.6, lw=0, label="장착 내 σ ±2.9µm")
+    ax.axvspan(-W2_MM, W2_MM, color=S2, alpha=0.07, lw=0, label="W2 (중앙 10개소)")
+    ax.axvspan(-W3_MM, W3_MM, color=S3, alpha=0.12, lw=0, label="W3 (중앙 5개소)")
+    for k, s in enumerate(w.columns):
+        ax.plot(w.index, w[s], color="#b5b4af", lw=0.9, ls="-" if s in NORMAL else "--",
+                label=("시편 11개 (정상 실선, NG 점선)" if k == 0 else None))
+    ax.plot(common_pat.index, common_pat, color=S1, lw=2.6, label="11시편 공통 패턴 (구간별 중앙값)")
+    for xa_, txt in ((-2.8, "왼쪽 끝 상승"), (2.75, "오른쪽 끝 상승")):
+        ax.annotate(txt, xy=(xa_, common_pat.loc[common_pat.index[np.argmin(np.abs(common_pat.index - xa_))]]),
+                    xytext=(xa_ * 0.72, 75), fontsize=8.5, color=INK2, ha="center",
+                    arrowprops=dict(arrowstyle="-", color=INK2, lw=0.8))
+    ax.set_xlabel("창 중앙 기준 위치 (mm)")
+    ax.set_ylabel("시편 프로파일 − 시편 중앙값 (µm)")
+    ax.set_title("열별 직경 프로파일 — 시편이 달라도 모양이 같다 (사후 관찰: 촬영계 고정 패턴 추정)", loc="left", fontsize=10)
+    ax.legend(fontsize=8, frameon=False, loc="upper center", ncol=3)
+    ax.set_ylim(-65, 115)
+    fig.tight_layout()
+    fig.savefig(FIGURES / "E14_profile.png", dpi=110)
+    plt.close(fig)
+
+
+def fig_pipeline():
+    """그림 3: 측정 파이프라인에서 E14가 바꾼 단계(대표값)만 강조한 흐름도."""
+    from matplotlib.patches import FancyBboxPatch
+    plt = _plt()
+    fig, ax = plt.subplots(figsize=(12, 4.6))
+    ax.set_xlim(0, 12)
+    ax.set_ylim(0, 4.6)
+    ax.axis("off")
+    W, H = 2.15, 1.05
+
+    def box(x, y, title, body, hi=False):
+        ax.add_patch(FancyBboxPatch((x, y), W, H, boxstyle="round,pad=0.02,rounding_size=0.08",
+                                    fc="#eaf2fc" if hi else "#f4f4f2", ec=S1 if hi else "#b5b4af", lw=2 if hi else 1))
+        ax.text(x + W / 2, y + H - 0.22, title, ha="center", va="center", fontsize=9.5, color=INK, fontweight="bold")
+        ax.text(x + W / 2, y + 0.38, body, ha="center", va="center", fontsize=8, color=INK2, linespacing=1.35)
+
+    def arrow(x0, y0, x1, y1):
+        ax.annotate("", xy=(x1, y1), xytext=(x0, y0), arrowprops=dict(arrowstyle="-|>", color=INK2, lw=1.1))
+
+    top, bot = 3.15, 0.75
+    xs = [0.15, 3.1, 6.05, 9.0]
+    row1 = [("① 사진", "16320×7532 백라이트\n실루엣 (10/21)"),
+            ("② 베어링 구간 검출", "약 9.5mm, 양끝 20% 제외\n→ 측정 창 W1 ≈5.7mm"),
+            ("③ 열별 엣지", "2px 간격 111열\n위·아래 cross50 서브픽셀"),
+            ("④ 열 직경 d(x)", "(아래 − 위) · cos θ\nθ = W1 직선적합 기울기")]
+    row2 = [("⑤ 이미지 대표값 (px)", "R0 직선적합 (현재)\nR1 전체 · R2 중앙10 · R3 중앙5", True),
+            ("⑥ 시편 대표값", "이미지 10~15장의 중앙값\n(R4·R5는 시편 프로파일)", False),
+            ("⑦ 보정 → mm", "방식 3: mm = 0.026092·px + c\nc는 LOSO로 8시편에서 적합", False),
+            ("⑧ 판정", "공차 20.010~20.030mm\nOK / NG", False)]
+    for x, (t, b) in zip(xs, row1):
+        box(x, top, t, b)
+    for x, (t, b, hi) in zip(xs, row2):
+        box(x, bot, t, b, hi)
+    for i in range(3):
+        arrow(xs[i] + W, top + H / 2, xs[i + 1], top + H / 2)
+        arrow(xs[i] + W, bot + H / 2, xs[i + 1], bot + H / 2)
+    ym = (top + bot + H) / 2  # ④ 아래에서 꺾어 ⑤ 위로
+    ax.plot([xs[3] + W / 2, xs[3] + W / 2, xs[0] + W / 2], [top, ym, ym], color=INK2, lw=1.1)
+    arrow(xs[0] + W / 2, ym, xs[0] + W / 2, bot + H)
+    ax.text(xs[0] + W / 2, bot - 0.32, "E14가 바꾼 단계는 ⑤뿐 — 나머지는 E6(10/21)와 동일",
+            ha="center", fontsize=9, color=S1, fontweight="bold")
+    ax.text(xs[2] + W / 2, bot - 0.32, "평가: 정상 9시편 LOSO MAE + 시편 내 교환 무작위화 검정",
+            ha="center", fontsize=8.5, color=INK2)
+    ax.set_title("측정 흐름과 E14의 비교 지점", loc="left", fontsize=10.5, color=INK)
+    fig.tight_layout()
+    fig.savefig(FIGURES / "E14_fig3_pipeline.png", dpi=110)
+    plt.close(fig)
+
+
+def fig_power():
+    """그림 7: 개별 비교의 보정 임계값 통과율(검정력 근사)과 이번 관측값의 위치."""
+    plt = _plt()
+    pw = pd.read_csv(RESULTS / "E14_0_power.csv")
+    te = pd.read_csv(RESULTS / "E14_tests.csv").set_index("비교")
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11, 4.3), sharey=True)
+    for ax, col, ttl in ((a1, "기각률_보정9of512", "1단계 기준 p ≤ 9/512"), (a2, "기각률_보정20of512", "2단계 기준 p ≤ 20/512")):
+        ax.axhline(0.05 if "20" in col else 0.025, color=INK2, ls=":", lw=1)
+        for rho, c in ((0.5, S1), (0.8, S2), (0.95, S3)):
+            g = pw[pw.rho == rho]
+            ax.plot(g.MAE감소_um, g[col], "-o", ms=7, lw=2, color=c, label=f"ρ = {rho}")
+            ax.text(5.12, g[col].iloc[-1], f"ρ={rho}", fontsize=8, va="center", color=INK2)
+        ax.axvspan(-1.2, 0, color=GRID, alpha=0.5, lw=0)
+        obs = [(k, te.loc[k, "MAE감소_um"]) for k in ("R2 vs R1", "R3 vs R2")]
+        for (key, d), mk in zip(obs, ("v", "^")):
+            ax.plot(d, 0.02, mk, ms=9, color=INK)
+        # 관측 MAE 변화는 '실제 효과'의 추정치일 뿐 같은 양이 아니라 참고 표시
+        ax.text(-1.1, 0.30, "참고: 이번 관측\n" + "\n".join(f"{'▼' if i == 0 else '▲'} {k} {d:+.2f}µm" for i, (k, d) in enumerate(obs))
+                + "\n(MAE가 오히려 늘어남)", fontsize=7.5, color=INK, va="top")
+        ax.axvline(1, color=S4, lw=1.2, ls="--")
+        ax.text(1.05, 0.93, "판정 하한\n1µm 감소", fontsize=7.5, color=INK2, va="top")
+        ax.set_xlim(-1.2, 5.6)
+        ax.set_ylim(0, 1)
+        ax.set_xlabel("실제 MAE 감소 (µm)  ← 늘어남 | 줄어듦 →")
+        ax.set_title(ttl, loc="left", fontsize=10)
+    a1.set_ylabel("임계값 통과율 (2000회 모의)")
+    a1.legend(frameon=False, fontsize=8.5, loc="upper left", title="두 대표값의 상관", title_fontsize=8)
+    fig.text(0.5, 0.005, "정규 생성 모형·n=9에서 비교 하나를 따로 모의한 값이다. Holm 2단계와 '1µm 이상 감소' 조건을 함께 넣은 "
+                         "실제 판정의 검정력은 이보다 낮거나 같다. 점선 가로선 = 명목 α.", ha="center", fontsize=8, color=INK2)
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
+    fig.savefig(FIGURES / "E14_fig7_power.png", dpi=110)
+    plt.close(fig)
+
+
+def step3():
+    """보고서 그림 (측정·판정에 쓰지 않음). 그림 1만 원본 사진을 읽는다(PREREG 부록 B, 시각화 예외)."""
+    FIGURES.mkdir(exist_ok=True)
+    m = load()
+    fig_overlay(m)
+    fig_representatives(m)
+    fig_pipeline()
+    fig_results()
+    fig_profile()
+    fig_power()
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--step", type=int, required=True, choices=[0, 1, 2])
+    ap.add_argument("--step", type=int, required=True, choices=[0, 1, 2, 3])
     a = ap.parse_args()
-    {0: step0, 1: step1, 2: step2}[a.step]()
+    {0: step0, 1: step1, 2: step2, 3: step3}[a.step]()
