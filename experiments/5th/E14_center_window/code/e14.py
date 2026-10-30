@@ -10,7 +10,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from paths import EDGES, E6_CODE, RES1021, RESULTS, SEED
+from paths import EDGES, E6_CODE, FIGURES, RES1021, RESULTS, SEED
 
 sys.path.insert(0, str(E6_CODE))
 import calibration as C  # noqa: E402  (원본, 수정 안 함)
@@ -202,8 +202,165 @@ def step0():
     print(pw.round(3).to_string(index=False))
 
 
+def columns(m):
+    """이미지별 열 표: x, Δx(mm), d(µm), 0.1mm 구간 b, 창 소속."""
+    rows = []
+    for f, g in m.groupby("filename", sort=False):
+        _, _, xm, x, d = per_image(g)
+        dx = (x - xm) * SCALE
+        rows.append(pd.DataFrame(dict(filename=f, specimen=g.specimen.iat[0], mount=int(g["mount"].iat[0]),
+                                      x=x, dx_mm=dx, d_um=d * SCALE * 1000, b=np.floor(dx / BIN_MM).astype(int),
+                                      W2=np.abs(dx) <= W2_MM, W3=np.abs(dx) <= W3_MM)))
+    return pd.concat(rows, ignore_index=True)
+
+
+def profile(col):
+    """시편 프로파일 P(b): 이미지별 구간 평균 → 이미지 간 구간별 중앙값, 모든 이미지에 공통인 구간만."""
+    ib = col.groupby(["specimen", "filename", "b"]).d_um.mean().rename("d_b").reset_index()
+    nimg = ib.groupby("specimen").filename.nunique()
+    cnt = ib.groupby(["specimen", "b"]).filename.nunique()
+    keep = cnt[cnt.values == nimg.reindex(cnt.index.get_level_values(0)).values].index
+    ib = ib.set_index(["specimen", "b"]).loc[keep].reset_index()
+    return ib, ib.groupby(["specimen", "b"]).d_b.median().rename("P")
+
+
+def rank_corr(a, b):
+    return float(np.corrcoef(pd.Series(a).rank(), pd.Series(b).rank())[0, 1])
+
+
+def step1():
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    plt.rcParams["font.family"] = ["AppleGothic", "DejaVu Sans"]
+    plt.rcParams["axes.unicode_minus"] = False
+
+    col = columns(load())
+    ib, P = profile(col)
+    specs = sorted(col.specimen.unique(), key=lambda s: int(s[2:]))
+
+    # 프로파일 표 (장착별 포함: mount 0 = 본시험, 1~5 = 재장착 1장씩)
+    prof = P.reset_index().assign(mount="all")
+    ibm = ib.merge(col[["filename", "mount"]].drop_duplicates(), on="filename")
+    pm = ibm.groupby(["specimen", "mount", "b"]).agg(P=("d_b", "median"), n_img=("filename", "nunique")).reset_index()
+    prof = pd.concat([prof, pm.assign(mount=pm["mount"].astype(str))], ignore_index=True)
+    prof["P_rel_um"] = prof.P - prof.groupby(["specimen", "mount"]).P.transform("median")
+    prof["b_center_mm"] = (prof.b + 0.5) * BIN_MM
+    prof.to_csv(RESULTS / "E14_profile.csv", index=False, encoding="utf-8-sig")
+
+    # 창 대비 c2, c3 와 끝열 효과 (이미지 단위 → 시편 요약)
+    rows = []
+    for f, g in col.groupby("filename", sort=False):
+        g = g.sort_values("x")
+        r1 = g.d_um.mean()
+        rows.append(dict(specimen=g.specimen.iat[0], c2=g.d_um[g.W2].mean() - r1, c3=g.d_um[g.W3].mean() - r1,
+                         end_L=g.d_um.iloc[:3].mean() - g.d_um.iloc[3:].mean(),
+                         end_R=g.d_um.iloc[-3:].mean() - g.d_um.iloc[:-3].mean()))
+    ci = pd.DataFrame(rows)
+    q = lambda s, k: s.quantile(k)
+    con = ci.groupby("specimen").agg(n_img=("c2", "size"),
+                                     c2_med=("c2", "median"), c2_q25=("c2", lambda s: q(s, .25)), c2_q75=("c2", lambda s: q(s, .75)),
+                                     c3_med=("c3", "median"), c3_q25=("c3", lambda s: q(s, .25)), c3_q75=("c3", lambda s: q(s, .75)),
+                                     endL_med=("end_L", "median"), endR_med=("end_R", "median")).loc[specs]
+    con.to_csv(RESULTS / "E14_profile_contrast.csv", encoding="utf-8-sig")
+
+    # 잡음/형상 분리
+    cb = col.merge(P.reset_index(), on=["specimen", "b"])  # 공통 구간 밖 열은 빠진다
+    sn = cb.assign(res=cb.d_um - cb.P).groupby(["specimen", "filename"]).res.std().groupby("specimen").median()
+    ns = pd.DataFrame(dict(sigma_noise_um=sn, sigma_shape_um=P.groupby("specimen").std())).loc[specs]
+    # 형상 재현 상관 (PREREG 외 기술, Codex 리뷰 3 반영). 파일명 = 촬영 시각 순.
+    # 재장착은 '단일 이미지 vs 본시험 중앙값'이므로 같은 꼴의 기준(본시험 단일 이미지 vs 나머지 중앙값)을 둔다.
+    # 정합 민감도: ±5구간(±0.5mm) 이동 중 최대 상관을 재장착·기준에 똑같이 적용한다.
+    def corr_shift(u, v, k):
+        """u를 k구간 밀었을 때 v와의 상관(겹치는 구간만)."""
+        uu = u.copy()
+        uu.index = uu.index + k
+        j = uu.index.intersection(v.index)
+        return float(np.corrcoef(uu[j], v[j])[0, 1])
+
+    m0 = ibm[ibm["mount"] == 0]
+    rec = []
+    for s in specs:
+        g0 = m0[m0.specimen == s]
+        fs = sorted(g0.filename.unique())
+        prof_of = lambda ff: g0[g0.filename.isin(ff)].groupby("b").d_b.median()
+        oe = corr_shift(prof_of(fs[0::2]), prof_of(fs[1::2]), 0)
+        h = len(fs) // 2
+        tb = corr_shift(prof_of(fs[:h]), prof_of(fs[h:]), 0)  # 앞 절반 vs 뒤 절반(시간 블록)
+        loo, loo_al = [], []
+        for f in fs:
+            one, rest = prof_of([f]), prof_of([x for x in fs if x != f])
+            loo.append(corr_shift(one, rest, 0))
+            loo_al.append(max(corr_shift(one, rest, k) for k in range(-5, 6)))
+        rm, rm_al = [], []
+        p0 = prof_of(fs)
+        for f, h1 in ibm[(ibm.specimen == s) & (ibm["mount"] > 0)].groupby("filename"):
+            one = h1.set_index("b").d_b
+            rm.append(corr_shift(one, p0, 0))
+            rm_al.append(max(corr_shift(one, p0, k) for k in range(-5, 6)))
+        rec.append(dict(specimen=s, corr_m0_oddeven=oe, corr_m0_timeblock=tb,
+                        corr_m0_loo_med=np.median(loo), corr_m0_loo_aligned_med=np.median(loo_al),
+                        corr_remount_med=np.median(rm) if rm else np.nan,
+                        corr_remount_aligned_med=np.median(rm_al) if rm_al else np.nan))
+    ns = ns.join(pd.DataFrame(rec).set_index("specimen"))
+    # R4 편향 진단: 시편 R4(P의 90% 분위수) − 시편 R1(이미지 R1의 중앙값) vs σ_noise, 정상 9시편
+    r1s = col.groupby(["specimen", "filename"]).d_um.mean().groupby("specimen").median()
+    ns["R4_minus_R1_um"] = P.groupby("specimen").quantile(0.9) - r1s
+    rho = rank_corr(ns.loc[NORMAL, "R4_minus_R1_um"], ns.loc[NORMAL, "sigma_noise_um"])
+    # 사후 관찰(PREREG 외): 11시편 공통 패턴을 뺀 시편 고유 형상. 공통 패턴은 방식 3의 상수 c가 흡수한다
+    Pw = P.unstack("specimen")
+    Pc = Pw.sub(Pw.median(), axis=1)  # 시편별 수준 제거
+    common_pat = Pc.median(axis=1)
+    ns["sigma_specific_um"] = Pc.sub(common_pat, axis=0).std()
+    ns["corr_with_common"] = Pc.corrwith(common_pat)
+    ns.to_csv(RESULTS / "E14_noise_shape.csv", encoding="utf-8-sig")
+
+    # 사후 관찰(Codex 리뷰 3 반영): 실제 평가에 들어가는 시편 대표값 차이 δ = median(Rk) − median(Rj).
+    # 방식 3에서 오차 변화는 (9/8)(δ − mean δ)이므로 |MAE 변화| ≤ mean|(9/8)(δ − mean δ)|. 실측치를 쓰지 않는다.
+    wi = col.groupby(["specimen", "filename"]).apply(
+        lambda g: pd.Series(dict(R1=g.d_um.mean(), R2=g.d_um[g.W2].mean(), R3=g.d_um[g.W3].mean())))
+    rs = wi.groupby("specimen").median().loc[NORMAL]
+    wd = []
+    for b_, a_ in (("R2", "R1"), ("R3", "R2"), ("R3", "R1")):
+        dl = rs[b_] - rs[a_]
+        de = 9 / 8 * (dl - dl.mean())
+        wd.append(dict(비교=f"{b_}-{a_}", delta_mean_um=dl.mean(), delta_sd_um=dl.std(),
+                       MAE변화_상한_um=float(np.abs(de).mean()), 오차변화_max_um=float(np.abs(de).max()),
+                       **{f"delta_{s}": dl[s] for s in NORMAL}))
+    wd = pd.DataFrame(wd)
+    wd.to_csv(RESULTS / "E14_window_delta.csv", index=False, encoding="utf-8-sig")
+
+    # 그림
+    fig, ax = plt.subplots(figsize=(9, 5.2))
+    ax.axhspan(-2.9, 2.9, color="0.88", label="장착 내 σ ±2.9µm")
+    for w, ls in ((W2_MM, "--"), (W3_MM, ":")):
+        for sg in (-1, 1):
+            ax.axvline(sg * w, color="0.4", ls=ls, lw=1, label=(f"W{2 if w == W2_MM else 3} ±{w:.2f}mm" if sg > 0 else None))
+    cmap = plt.get_cmap("tab20")
+    pa = prof[prof["mount"] == "all"]
+    for k, s in enumerate(specs):
+        g = pa[pa.specimen == s]
+        ax.plot(g.b_center_mm, g.P_rel_um, ls="-" if s in NORMAL else "--", lw=1.4, color=cmap(k), label=s)
+    ax.set_xlabel("창 중앙 기준 위치 x − xm (mm)")
+    ax.set_ylabel("시편 프로파일 P(b) − 중앙값 (µm)")
+    ax.set_title("E14-1 열별 직경 프로파일 (10/21, 시편별 이미지 중앙값, 0.1mm 구간)")
+    ax.legend(fontsize=7, ncol=3, loc="upper center")
+    fig.tight_layout()
+    fig.savefig(FIGURES / "E14_profile.png", dpi=110)
+
+    pd.set_option("display.width", 220)
+    print(con.round(2).to_string())
+    print(ns.round(3).to_string())
+    a11 = con.c3_med.abs().median()
+    a9 = con.loc[NORMAL, "c3_med"].abs().median()
+    print(f"\n|c3| 시편 중앙값의 중앙값: 11시편 {a11:.2f}µm, 정상 9시편 {a9:.2f}µm (기준 2.9µm)")
+    print(f"R4−R1 vs σ_noise Spearman (정상 9): {rho:.3f}")
+    print(f"[사후] 공통 패턴 SD {common_pat.std():.2f}µm")
+    print(wd[["비교", "delta_mean_um", "delta_sd_um", "MAE변화_상한_um", "오차변화_max_um"]].round(3).to_string(index=False))
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--step", type=int, required=True, choices=[0])
+    ap.add_argument("--step", type=int, required=True, choices=[0, 1])
     a = ap.parse_args()
-    {0: step0}[a.step]()
+    {0: step0, 1: step1}[a.step]()
