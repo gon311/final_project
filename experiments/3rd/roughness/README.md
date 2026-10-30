@@ -1,6 +1,6 @@
 # E11 표면거칠기 — 이미지로 거칠기가 보이는가, 오차를 설명하는가
 
-- 작성: 2026-10-27 · 규칙: `PREREG_E11.md`(결과 전에 `5179fb6`으로 커밋, 부록에 실행 중 결정·사후 변경 기록) · 구현 지시: `EXPERIMENTS_E11_roughness_for_ClaudeCode.md`
+- 작성: 2026-10-27 · 규칙: `PREREG_E11.md`(결과 전에 `0b363dd`으로 커밋, 부록에 실행 중 결정·사후 변경 기록) · 구현 지시: `EXPERIMENTS_E11_roughness_for_ClaudeCode.md`
 - 질문: 10/21 사진에서 시편별 표면거칠기(Ra·Rz)가 보이는가, 그리고 거칠기가 치수 오차(라벨 잡음 포함)를 설명하는가.
 - **새 측정·재촬영 없이 기존 데이터만 썼다.** 10/21 결과 CSV와 열별 엣지 캐시만 읽었고 원본 이미지는 디코딩하지 않았다.
 
@@ -124,7 +124,7 @@ n = 6의 기술통계이며 검정하지 않았다. Rz와 재장착 변동의 �
 | 경로 | 내용 |
 |---|---|
 | `PREREG_E11.md`, `EXPERIMENTS_E11_roughness_for_ClaudeCode.md` | 사전 등록 규칙(부록에 실행 중 결정·사후 변경), 지시서 |
-| `data/roughness_raw.csv` | 거칠기 원본 |
+| `data/roughness_raw.csv` | 거칠기 원본 (업체 측정값, 팀 내부 사용이라 저장소에 없음) |
 | `code/` | `paths.py`, `load_roughness.py`, `load_edges.py`, `e11_0_checks.py`, `e11a_edge_texture.py`, `e11a_sensitivity.py`, `e11a_endspike.py`, `e11b_edge_sharpness.py`, `e11c_label_noise.py`, `e11e_error_vs_roughness.py`, `e11f_remount.py` |
 | `results/` | `roughness_clean.csv`, `E11_0_checks.csv`, `E11A_*`(by_specimen, cross_pairs, remount, summary, spectrum, spectrum_8px, sens_summary, sens_by_specimen, endcols, endspike), `E11B_*`, `E11C_*`(upper_bound, whatif, conclusion), `E11E_*`(corr, loso, summary), `E11F_remount.csv` |
 | `figures/` | `E11A_residual_examples.png`, `E11A_aspec_vs_Rz.png`, `E11B_esf_overlay.png`, `E11B_width_vs_Ra.png`, `E11C_pass_prob_vs_c.png` |

@@ -301,3 +301,7 @@ runs/
 
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,r,python,macos
+
+# 업체 실측 데이터 (팀 내부 사용, 공개 저장소에 올리지 않음)
+experiments/3rd/E6_E10_20261021/results/values_by_image_1021.csv
+experiments/3rd/roughness/data/roughness_raw.csv

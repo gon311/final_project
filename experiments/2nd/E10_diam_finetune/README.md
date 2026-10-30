@@ -1,6 +1,6 @@
 # E10. 실측 지름 파인튜닝 (멘토안 검증 + 다음 촬영 GT 학습 구조)
 
-> `docs/EXPERIMENTS_E7resume_E10.md`(rev2 addendum) E10절. E7-close 커밋(`e16b619`) 뒤
+> `docs/EXPERIMENTS_E7resume_E10.md`(rev2 addendum) E10절. E7-close 커밋(`999ed37`) 뒤
 > 시작. 완료 상태 — 8개 변형 전부 평균 찍기를 이기지 못했고, 해석 규칙(0.4절·7단계)에 따라
 > "이 데이터에서는 실측 레이블 학습이 셋업 잡음을 넘지 못함"으로 결론 낸다.
 

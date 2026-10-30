@@ -125,6 +125,7 @@ E6_E10_20261021/
     make_meta_1021.py  사진목록 엑셀 -> results/meta_1021_all.csv
     scan_1021.py       150장 측정 + E7 프로파일 추출 -> cache/scan/ (재시작 가능)
     assemble_1021.py   cache/scan -> results/values_by_image_1021.csv + cache/profiles_1021.npz
+                       (values_by_image_1021.csv는 업체 실측값이 있어 저장소에 없음, 팀 내부 사용)
     repeat_ratio.py    V1 스케일, 반복성 기준선, 핀 비율 실험 -> results/repeatability_ratio.json
     run_e6_1021.py     E6 캘리브레이션(2nd calibration.py import) -> results/E6/
     e10_1021.py        E10 래퍼(2nd pretrain/finetune/evaluate를 수정 없이 호출) -> results/E10/
