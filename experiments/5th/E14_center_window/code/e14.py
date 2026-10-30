@@ -359,8 +359,103 @@ def step1():
     print(wd[["비교", "delta_mean_um", "delta_sd_um", "MAE변화_상한_um", "오차변화_max_um"]].round(3).to_string(index=False))
 
 
+IMG_CANDS = ["R0", "R1", "R2", "R3", "R2L", "R3L", "R1m", "R2m", "R3m"]
+MAIN = [("R1", "R2"), ("R2", "R3")]  # (A 기준, B 후보), PREREG 5.2
+DESC = [("R0", "R1"), ("R0", "R2L"), ("R0", "R3L"), ("R0", "R2"), ("R0", "R3"), ("R1", "R3"), ("R1", "R4"), ("R1", "R5")]
+
+
+def image_candidates(g):
+    """PREREG 2.1. 모든 후보가 W1 공통 θ·xm을 쓴다. 단위 px."""
+    r0, th, xm, x, d = per_image(g)
+    dx = (x - xm) * SCALE
+    yt, yb = g.y_top.to_numpy(), g.y_bot.to_numpy()
+    out = dict(R0=r0)
+    for k, w in (("1", np.inf), ("2", W2_MM), ("3", W3_MM)):
+        sel = np.abs(dx) <= w
+        out["R" + k], out["R" + k + "m"] = d[sel].mean(), np.median(d[sel])
+        if k != "1":  # 창 안에서만 강건 직선적합, 창 중앙에서 평가
+            xs = x[sel]
+            xc = xs.mean()
+            out["R" + k + "L"] = (np.polyval(robust_fit(xs, yb[sel]), xc) - np.polyval(robust_fit(xs, yt[sel]), xc)) * np.cos(th)
+    return out
+
+
+def step2():
+    m = load()
+    rows = []
+    for f, g in m.groupby("filename", sort=False):
+        rows.append(dict(filename=f, specimen=g.specimen.iat[0], mount=int(g["mount"].iat[0]), 실측mm=g["실측mm"].iat[0],
+                         pin_cross50_px=g.pin_cross50_px.iat[0], **image_candidates(g)))
+    img = pd.DataFrame(rows)
+    img.to_csv(RESULTS / "E14_by_image.csv", index=False, encoding="utf-8-sig")
+    col = columns(m)
+
+    spec_tabs = {}
+    for sel in ("all", "burst"):
+        im = img if sel == "all" else img[img["mount"] == 0]
+        t = im.groupby("specimen").agg(실측mm=("실측mm", "first"), pin_px=("pin_cross50_px", "median"),
+                                       **{c: (c, "median") for c in IMG_CANDS})
+        t_ratio = im.assign(**{c: im[c] / im.pin_cross50_px for c in IMG_CANDS}).groupby("specimen")[IMG_CANDS].median()
+        _, P = profile(col[col.filename.isin(im.filename)])
+        t["R4"] = P.groupby("specimen").quantile(0.9) / (SCALE * 1000)  # µm → px (PREREG 2.2)
+        t["R5"] = P.groupby("specimen").max() / (SCALE * 1000)
+        for c in ("R4", "R5"):
+            t_ratio[c] = t[c] / t.pin_px  # 시편 단위 후보는 시편 핀 중앙값으로 나눈다 (사전등록 구현)
+        # 사후 민감도(Codex 리뷰 4): 이미지별 d(x)/pin을 먼저 구한 뒤 프로파일 → 분위수·최댓값. 방식 4에만 쓴다
+        cn = col[col.filename.isin(im.filename)].merge(im[["filename", "pin_cross50_px"]], on="filename")
+        _, Pn = profile(cn.assign(d_um=cn.d_um / (SCALE * 1000) / cn.pin_cross50_px))
+        t_ratio["R4n"], t_ratio["R5n"] = Pn.groupby("specimen").quantile(0.9), Pn.groupby("specimen").max()
+        spec_tabs[sel] = (t, t_ratio)
+    bs = pd.concat({k: v[0].join(v[1].add_prefix("ratio_")) for k, v in spec_tabs.items()}, names=["사진선택"]).reset_index()
+    bs.to_csv(RESULTS / "E14_by_specimen.csv", index=False, encoding="utf-8-sig")
+
+    cands = IMG_CANDS + ["R4", "R5", "R4n", "R5n"]
+    lrows = []
+    for sel, (t, tr) in spec_tabs.items():
+        for c in cands:
+            for meth, fitter, src in (("3_V1고정", C.fit_fixed_scale, t), ("4_핀비율선형", C.fit_linear, tr)):
+                if c not in src:  # R4n·R5n은 비율 정의라 방식 4만
+                    continue
+                tab = pd.DataFrame({"실측mm": t["실측mm"], "px": src[c]})
+                err = loso_err(tab, fitter)
+                fn, _ = fitter(tab.loc[NORMAL])
+                lrows.append(dict(사진선택=sel, 후보=c, 방식=meth, MAE_um=np.abs(err).mean(), MAX_um=np.abs(err).max(),
+                                  **{f"err_{s}": e for s, e in zip(NORMAL, err)},
+                                  **{f"pred_{s}": fn(float(tab.loc[s, "px"])) for s in ("NO11", "NO12")}))
+    loso = pd.DataFrame(lrows)
+    loso.to_csv(RESULTS / "E14_loso.csv", index=False, encoding="utf-8-sig")
+
+    # PREREG 5: 방식 3, all
+    t = spec_tabs["all"][0]
+    truth = t.loc[NORMAL, "실측mm"].to_numpy()
+    mae = lambda c: mae_m3(t.loc[NORMAL, c].to_numpy(), truth)
+    trows = []
+    for kind, pairs in (("주", MAIN), ("기술", DESC)):
+        for a_, b_ in pairs:
+            tt, p, _ = swap_test(t.loc[NORMAL, a_].to_numpy(), t.loc[NORMAL, b_].to_numpy(), truth)
+            trows.append(dict(구분=kind, 비교=f"{b_} vs {a_}", MAE_A_um=mae(a_), MAE_B_um=mae(b_), T_um=tt,
+                              MAE감소_um=-tt, p_단측=p))
+    tests = pd.DataFrame(trows)
+    # 보정 Holm(PREREG 5.2): 작은 p ≤ 9/512 이면 기각, 그다음 나머지 ≤ 20/512
+    mi = tests.index[tests.구분 == "주"]
+    order = tests.loc[mi, "p_단측"].sort_values().index
+    rej = {i: False for i in mi}
+    if tests.at[order[0], "p_단측"] <= CUT_1 + 1e-12:
+        rej[order[0]] = True
+        rej[order[1]] = tests.at[order[1], "p_단측"] <= CUT_2 + 1e-12
+    tests["Holm보정_기각"] = [rej.get(i, "기술") for i in tests.index]
+    tests["판정"] = ["기술" if i not in mi else ("개선" if rej[i] and tests.at[i, "MAE감소_um"] >= 1 else "구분 불가")
+                   for i in tests.index]
+    tests.to_csv(RESULTS / "E14_tests.csv", index=False, encoding="utf-8-sig")
+
+    pd.set_option("display.width", 220)
+    print(tests.round(3).to_string(index=False))
+    piv = loso.pivot_table(index="후보", columns=["방식", "사진선택"], values="MAE_um").loc[cands]
+    print(piv.round(2).to_string())
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--step", type=int, required=True, choices=[0, 1])
+    ap.add_argument("--step", type=int, required=True, choices=[0, 1, 2])
     a = ap.parse_args()
-    {0: step0, 1: step1}[a.step]()
+    {0: step0, 1: step1, 2: step2}[a.step]()
